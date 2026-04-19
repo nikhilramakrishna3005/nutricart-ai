@@ -1,0 +1,23 @@
+[
+  {
+    "id": "store_green_cart",
+    "name": "GreenCart Market",
+    "distance_miles": 0.8,
+    "is_open": true,
+    "opens_at": null
+  },
+  {
+    "id": "store_urban_pantry",
+    "name": "Urban Pantry",
+    "distance_miles": 1.4,
+    "is_open": true,
+    "opens_at": null
+  },
+  {
+    "id": "store_value_mart",
+    "name": "ValueMart Express",
+    "distance_miles": 2.1,
+    "is_open": false,
+    "opens_at": "8:00 AM tomorrow"
+  }
+]

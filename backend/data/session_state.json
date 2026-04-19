@@ -1,0 +1,428 @@
+{
+  "chatHistory": [
+    {
+      "role": "user",
+      "content": "log banana"
+    },
+    {
+      "role": "assistant",
+      "message": "Breakfast logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "log apple"
+    },
+    {
+      "role": "assistant",
+      "message": "Lunch logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "Create groceries list under 60 dollars for a week"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan that fits your budget.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "okay create meal plan based on this"
+    },
+    {
+      "role": "assistant",
+      "message": "I created a meal plan from your groceries.",
+      "intent": "generate_meals"
+    },
+    {
+      "role": "user",
+      "content": "Log biriyani for lunch"
+    },
+    {
+      "role": "assistant",
+      "message": "Lunch logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "log pasta for dinner"
+    },
+    {
+      "role": "assistant",
+      "message": "Dinner logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "Hi"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan that fits your budget.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "Prepare the grocery plan under 50 dollars"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan that fits your budget.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "Grocery List under 50"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan that fits your budget.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "Mean plan"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan that fits your budget.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "food log"
+    },
+    {
+      "role": "assistant",
+      "message": "Breakfast logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "create a meal plan"
+    },
+    {
+      "role": "assistant",
+      "message": "I created a meal plan from your groceries.",
+      "intent": "generate_meals"
+    },
+    {
+      "role": "user",
+      "content": "Grocery list under 50 dollars"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan that fits your budget.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "Meal plan"
+    },
+    {
+      "role": "assistant",
+      "message": "I created a meal plan from your groceries.",
+      "intent": "generate_meals"
+    },
+    {
+      "role": "user",
+      "content": "Log Biriyani for the breakfast"
+    },
+    {
+      "role": "assistant",
+      "message": "Breakfast logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "Log Pasta for lunch"
+    },
+    {
+      "role": "assistant",
+      "message": "Lunch logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "chapati for dinner"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan that fits your budget.",
+      "intent": "plan_groceries"
+    }
+  ],
+  "stores": [
+    {
+      "id": "store_target_mission",
+      "name": "Target — Mission Street",
+      "distance_miles": 0.7,
+      "is_open": true,
+      "opens_at": null,
+      "zip_code": "94103",
+      "last_updated": "2026-04-18T07:45:00Z"
+    }
+  ],
+  "products": [
+    {
+      "id": "prod_safeway_salmon_fillet",
+      "name": "Safeway Atlantic salmon fillet",
+      "store_id": "store_safeway_noriega",
+      "price_usd": 12.99,
+      "in_stock": true,
+      "category": "Seafood",
+      "diet_type": "nonveg",
+      "risky_tags": [
+        "fish"
+      ],
+      "nutrition_tags": [
+        "high_protein",
+        "omega3"
+      ],
+      "calories": 206,
+      "protein_g": 22.0,
+      "fiber_g": 0.0,
+      "carbs_g": 0.0
+    },
+    {
+      "id": "prod_air_chilled_chicken_thighs",
+      "name": "Mary's air-chilled chicken thighs",
+      "store_id": "store_target_mission",
+      "price_usd": 8.99,
+      "in_stock": true,
+      "category": "Meat / Poultry",
+      "diet_type": "nonveg",
+      "risky_tags": [],
+      "nutrition_tags": [
+        "high_protein",
+        "dinner"
+      ],
+      "calories": 200,
+      "protein_g": 26.0,
+      "fiber_g": 0.0,
+      "carbs_g": 0.0
+    },
+    {
+      "id": "prod_tjs_riced_cauliflower",
+      "name": "Trader Joe's organic riced cauliflower",
+      "store_id": "store_trader_joes_castro",
+      "price_usd": 2.99,
+      "in_stock": true,
+      "category": "Frozen / Vegetables",
+      "diet_type": "veg",
+      "risky_tags": [],
+      "nutrition_tags": [
+        "low_carb",
+        "vegetarian"
+      ],
+      "calories": 25,
+      "protein_g": 2.0,
+      "fiber_g": 2.0,
+      "carbs_g": 4.0
+    },
+    {
+      "id": "prod_prego_mushroom",
+      "name": "Prego mushroom pasta sauce",
+      "store_id": "store_walmart_ocean",
+      "price_usd": 2.48,
+      "in_stock": true,
+      "category": "Pantry / Sauce",
+      "diet_type": "veg",
+      "risky_tags": [],
+      "nutrition_tags": [
+        "budget"
+      ],
+      "calories": 70,
+      "protein_g": 2.0,
+      "fiber_g": 2.0,
+      "carbs_g": 11.0
+    },
+    {
+      "id": "prod_barilla_whole_grain_spaghetti",
+      "name": "Barilla whole grain spaghetti",
+      "store_id": "store_target_mission",
+      "price_usd": 2.19,
+      "in_stock": true,
+      "category": "Pantry / Pasta",
+      "diet_type": "veg",
+      "risky_tags": [
+        "gluten",
+        "wheat"
+      ],
+      "nutrition_tags": [
+        "whole_grain",
+        "budget"
+      ],
+      "calories": 200,
+      "protein_g": 8.0,
+      "fiber_g": 6.0,
+      "carbs_g": 41.0
+    },
+    {
+      "id": "prod_gv_long_grain_rice",
+      "name": "Great Value long grain white rice (2 lb)",
+      "store_id": "store_walmart_ocean",
+      "price_usd": 1.84,
+      "in_stock": true,
+      "category": "Pantry / Rice",
+      "diet_type": "veg",
+      "risky_tags": [],
+      "nutrition_tags": [
+        "budget",
+        "staple"
+      ],
+      "calories": 160,
+      "protein_g": 3.0,
+      "fiber_g": 0.0,
+      "carbs_g": 36.0
+    },
+    {
+      "id": "prod_great_value_penne",
+      "name": "Great Value penne rigate",
+      "store_id": "store_walmart_ocean",
+      "price_usd": 1.12,
+      "in_stock": true,
+      "category": "Pantry / Pasta",
+      "diet_type": "veg",
+      "risky_tags": [
+        "gluten",
+        "wheat"
+      ],
+      "nutrition_tags": [
+        "budget",
+        "staple"
+      ],
+      "calories": 200,
+      "protein_g": 7.0,
+      "fiber_g": 2.0,
+      "carbs_g": 42.0
+    }
+  ],
+  "basket": {
+    "items": [
+      {
+        "product_id": "prod_safeway_salmon_fillet",
+        "name": "Safeway Atlantic salmon fillet",
+        "quantity": 1,
+        "line_total_usd": 12.99
+      },
+      {
+        "product_id": "prod_air_chilled_chicken_thighs",
+        "name": "Mary's air-chilled chicken thighs",
+        "quantity": 1,
+        "line_total_usd": 8.99
+      },
+      {
+        "product_id": "prod_tjs_riced_cauliflower",
+        "name": "Trader Joe's organic riced cauliflower",
+        "quantity": 1,
+        "line_total_usd": 2.99
+      },
+      {
+        "product_id": "prod_prego_mushroom",
+        "name": "Prego mushroom pasta sauce",
+        "quantity": 1,
+        "line_total_usd": 2.48
+      },
+      {
+        "product_id": "prod_barilla_whole_grain_spaghetti",
+        "name": "Barilla whole grain spaghetti",
+        "quantity": 1,
+        "line_total_usd": 2.19
+      },
+      {
+        "product_id": "prod_gv_long_grain_rice",
+        "name": "Great Value long grain white rice (2 lb)",
+        "quantity": 1,
+        "line_total_usd": 1.84
+      },
+      {
+        "product_id": "prod_great_value_penne",
+        "name": "Great Value penne rigate",
+        "quantity": 1,
+        "line_total_usd": 1.12
+      }
+    ],
+    "subtotal_usd": 32.6
+  },
+  "mealPlan": [
+    {
+      "id": "meal_high_protein_breakfast",
+      "title": "High-protein breakfast bowl",
+      "meals": [
+        "Layer yogurt, fruit, and granola; add oats cooked in almond milk for volume.",
+        "Uses your picks: Safeway Atlantic salmon fillet, Mary's air-chilled chicken thighs, Trader Joe's organic riced cauliflower, Prego mushroom pasta sauce, Barilla whole grain spaghetti.",
+        "Pantry anchors: Greek yogurt or cottage cheese, oats (warm or overnight), blueberries, banana, granola sprinkle."
+      ],
+      "notes": "Inspired by american flavors."
+    },
+    {
+      "id": "meal_veg_power_lunch",
+      "title": "Vegetarian power lunch box",
+      "meals": [
+        "Portable macros: prep eggs ahead, keep avocado sealed until eating.",
+        "Uses your picks: Safeway Atlantic salmon fillet, Mary's air-chilled chicken thighs, Trader Joe's organic riced cauliflower, Prego mushroom pasta sauce, Barilla whole grain spaghetti.",
+        "Pantry anchors: baby spinach, avocado, hummus, hard boiled eggs (optional swap tofu), whole grain crackers or naan."
+      ],
+      "notes": "Inspired by american flavors."
+    },
+    {
+      "id": "meal_chicken_rice_meal_prep",
+      "title": "Chicken thigh rice meal-prep",
+      "meals": [
+        "Brown thighs, bake with sauce, steam rice in parallel — 4 lunch portions.",
+        "Uses your picks: Safeway Atlantic salmon fillet, Mary's air-chilled chicken thighs, Trader Joe's organic riced cauliflower, Prego mushroom pasta sauce, Barilla whole grain spaghetti.",
+        "Pantry anchors: chicken thighs, long grain rice, frozen vegetables, marinara or simmer sauce."
+      ],
+      "notes": "Inspired by american flavors."
+    }
+  ],
+  "nutritionSummary": {
+    "score": 87,
+    "calories_today": 212,
+    "protein_g": 14.0,
+    "carbs_g": 26.8,
+    "fat_g": 4.9,
+    "fiber_g": 2.4,
+    "highlights": [
+      "Fibre is on the light side—add beans, oats, or greens when you shop.",
+      "7 items in your basket leave room to swap without blowing the budget."
+    ]
+  },
+  "dailyInsight": "Fibre is the softer signal here. Add spinach, beans, or oats on your next shop.",
+  "explanation": "These picks balance cost, protein, and fibre.",
+  "intent": "plan_groceries",
+  "assistantSummary": "I found a grocery plan that fits your budget.",
+  "foodLogUpdates": [],
+  "myDay": {
+    "breakfast": {
+      "title": "Biriyani For The Breakfast",
+      "calories": 120,
+      "macrosSummary": "6g protein · 18g carbs · 2g fibre",
+      "logged": true
+    },
+    "lunch": {
+      "title": "pasta",
+      "calories": 200,
+      "macrosSummary": "8g protein · 42g carbs · 3g fibre",
+      "logged": true
+    },
+    "dinner": {
+      "title": "pasta",
+      "calories": 200,
+      "macrosSummary": "8g protein · 42g carbs · 3g fibre",
+      "logged": true
+    }
+  },
+  "settings": {
+    "profile": {
+      "fullName": "Alex",
+      "username": "Nikhilrk",
+      "age": 26,
+      "location": "San Francisco, CA",
+      "email": "nik@example.com"
+    }
+  }
+}

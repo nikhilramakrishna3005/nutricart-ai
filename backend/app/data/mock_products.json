@@ -1,0 +1,50 @@
+[
+  {
+    "id": "prod_whole_wheat_pasta",
+    "name": "Whole wheat pasta",
+    "store_id": "store_green_cart",
+    "price_usd": 3.49,
+    "in_stock": true,
+    "category": "Pantry"
+  },
+  {
+    "id": "prod_marinara",
+    "name": "Marinara sauce",
+    "store_id": "store_green_cart",
+    "price_usd": 4.29,
+    "in_stock": true,
+    "category": "Pantry"
+  },
+  {
+    "id": "prod_greek_yogurt",
+    "name": "Greek yogurt (plain)",
+    "store_id": "store_urban_pantry",
+    "price_usd": 5.99,
+    "in_stock": true,
+    "category": "Dairy"
+  },
+  {
+    "id": "prod_spinach",
+    "name": "Baby spinach",
+    "store_id": "store_urban_pantry",
+    "price_usd": 3.99,
+    "in_stock": false,
+    "category": "Produce"
+  },
+  {
+    "id": "prod_chicken",
+    "name": "Chicken thighs",
+    "store_id": "store_value_mart",
+    "price_usd": 9.99,
+    "in_stock": true,
+    "category": "Protein"
+  },
+  {
+    "id": "prod_lentils",
+    "name": "Red lentils (dry)",
+    "store_id": "store_green_cart",
+    "price_usd": 2.99,
+    "in_stock": true,
+    "category": "Pantry"
+  }
+]
