@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 
+import { ClientProviders } from "@/components/shared/ClientProviders";
 import { SiteHeader } from "@/components/shared/SiteHeader";
 
 import "./globals.css";
@@ -27,7 +28,9 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <SiteHeader />
-        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+        <ClientProviders>
+          <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+        </ClientProviders>
       </body>
     </html>
   );

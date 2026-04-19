@@ -4,17 +4,14 @@ import type { LucideIcon } from "lucide-react";
 import { Flame, ListChecks } from "lucide-react";
 
 import { DailyMomentumCard } from "@/components/planner/DailyMomentumCard";
-import { usePlannerNutriBridge } from "@/lib/store/usePlannerNutriBridge";
+import { useDashboardMetrics } from "@/lib/useDashboardMetrics";
 import { cn } from "@/lib/utils";
 
-const CARD = "w-full rounded-[20px] bg-[#131C2A] px-4 py-5 sm:px-6 sm:py-6";
+const CARD =
+  "flex w-full flex-col rounded-[20px] bg-[#131C2A] px-4 py-5 sm:px-6 sm:py-6 lg:h-full lg:min-h-0";
 
 const iconBoxClass =
   "flex size-9 shrink-0 items-center justify-center rounded-xl border border-[#2A3A50] bg-[#1A2333] text-[#EEF2F7]";
-
-const DEFAULT_CAL_GOAL = 1200;
-/** Tracked micronutrient slots for the second row (demo baseline). */
-const OTHER_TRACKED = 22;
 
 interface TargetRowProps {
   icon: LucideIcon;
@@ -57,32 +54,23 @@ function TargetRow({ icon: Icon, label, valueLine, progress, color }: TargetRowP
  * Daily calorie + nutrient tracking summary with linear progress and a premium streak block below.
  */
 export function DailyTargetsCard({ className }: { className?: string }) {
-  const { nutritionSummary: n } = usePlannerNutriBridge();
+  const m = useDashboardMetrics();
 
-  const calProgress = n
-    ? Math.min(100, Math.round((n.calories_today / DEFAULT_CAL_GOAL) * 100))
-    : 68;
-  const otherProgress = n
-    ? Math.min(100, Math.round((n.highlights.length / OTHER_TRACKED) * 100))
-    : 55;
-
-  const calorieLine = n
-    ? `${n.calories_today} / ${DEFAULT_CAL_GOAL} kcal`
-    : "820 / 1200 kcal";
-  const otherLine = n
-    ? `${n.highlights.length} / ${OTHER_TRACKED} tracked`
-    : "12 / 22 tracked";
+  const calProgress = m.calorieProgress;
+  const otherProgress = m.otherNutrientsProgress;
+  const calorieLine = m.calorieLine;
+  const otherLine = m.otherNutrientsLine;
 
   return (
     <section className={cn(CARD, className)} aria-labelledby="daily-targets-heading">
       <h2
         id="daily-targets-heading"
-        className="text-[11px] font-bold uppercase tracking-section-caps text-[#5E7590]"
+        className="shrink-0 text-[11px] font-bold uppercase tracking-section-caps text-[#5E7590]"
       >
         Daily targets
       </h2>
 
-      <div className="mt-5 space-y-5">
+      <div className="mt-5 shrink-0 space-y-5">
         <TargetRow
           icon={Flame}
           label="Calories"
@@ -99,9 +87,14 @@ export function DailyTargetsCard({ className }: { className?: string }) {
         />
       </div>
 
-      <div className="mt-6 h-px w-full bg-[#2A3A50]" role="presentation" />
+      <div className="mt-5 h-px w-full shrink-0 bg-[#2A3A50] lg:mt-6" role="presentation" />
 
-      <DailyMomentumCard />
+      <DailyMomentumCard
+        className="mt-5 min-h-0 flex-1 lg:mt-6"
+        streakTitle={m.streakTitle}
+        streakSubtitle={m.streakSubtitleText}
+        weekFlameOn={m.weekFlameOn}
+      />
     </section>
   );
 }

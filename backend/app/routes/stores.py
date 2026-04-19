@@ -7,7 +7,7 @@ router = APIRouter()
 
 
 @router.get("", response_model=dict)
-def get_stores(zip: str = Query(..., description="User zip / postal code (mock lookup)")) -> dict:
-    """Return mock nearby stores for a zip code."""
+def get_stores(zip: str = Query(..., description="User zip / postal code (OSM live or mock)")) -> dict:
+    """Return nearby stores for a zip (live OSM when available, else mock fixtures)."""
     stores: list[Store] = list_stores_near_zip(zip)
     return {"stores": stores}

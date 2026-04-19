@@ -1,6 +1,11 @@
+"use client";
+
 import { AppTopBar } from "@/components/shared/AppTopBar";
+import { useUserProfileOptional } from "@/context/UserProfileContext";
 
 export function SettingsHeader() {
+  const { greetingName } = useUserProfileOptional();
+
   return (
     <AppTopBar
       layout="stack"
@@ -10,7 +15,7 @@ export function SettingsHeader() {
             Settings
           </h1>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-[#5E7590] sm:text-base">
-            Manage your nutrition and app preferences
+            {greetingName}, manage your nutrition and app preferences
           </p>
         </>
       }

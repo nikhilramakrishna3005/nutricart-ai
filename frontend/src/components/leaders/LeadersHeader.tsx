@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, User } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import { useUserProfileOptional } from "@/context/UserProfileContext";
 import { AppTopBar } from "@/components/shared/AppTopBar";
 
 const profileBtnClass =
@@ -70,13 +71,14 @@ function NutrientRingLink({ percent }: { percent: number }) {
 export function LeadersHeader() {
   const [offset, setOffset] = useState(0);
   const label = useMemo(() => labelForOffset(offset), [offset]);
+  const { initials } = useUserProfileOptional();
 
   return (
     <AppTopBar
       left={
-        <button type="button" className={profileBtnClass} aria-label="Profile">
-          <User className="size-[18px]" strokeWidth={2} />
-        </button>
+        <Link href="/profile" className={profileBtnClass} aria-label="Open profile">
+          <span className="text-[11px] font-bold tracking-tight text-[#EEF2F7]">{initials}</span>
+        </Link>
       }
       center={
         <div className="flex min-w-0 max-w-full items-center justify-center gap-1.5">

@@ -47,18 +47,18 @@ def build_explain_plan_bundle(
 ) -> ExplainPlanBundle:
     focus = detect_explain_focus(message)
     stores = plan.stores
-    first = stores[0] if stores else None
+    first = plan.selected_store or (stores[0] if stores else None)
     basket = plan.basket
     ratio = (basket.subtotal_usd / filters.budget_usd) if filters.budget_usd else 0.0
     store_short = first.name.split("—")[0].strip()[:42] if first else "your top store"
 
     if focus == "store" and first:
         expl = (
-            f"We list {store_short} first because it is open when others may not be, "
-            f"and it is among the closest options in your area. This is not a sponsorship—just a good fit for this trip."
+            f"We anchored this plan on {store_short} because it lines up with open hours, distance, "
+            f"and the items we can model in your basket. This is not a sponsorship—just a practical fit for this trip."
         )
-        msg = f"{store_short} is first for opening hours and distance on this plan."
-        daily = "If that store is closed when you arrive, use the next one on the list without changing your filters."
+        msg = f"{store_short} is the selected store anchor for this grocery plan."
+        daily = "If that store is closed when you arrive, pick the next nearby option without changing your filters."
     elif focus == "nutrient":
         mlow = message.lower()
         if "fiber" in mlow or "fibre" in mlow:

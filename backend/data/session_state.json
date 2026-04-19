@@ -152,154 +152,424 @@
       "role": "assistant",
       "message": "I found a grocery plan that fits your budget.",
       "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "Hi"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan that fits your budget.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "Hey"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan that fits your budget.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "Hi"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan that fits your budget.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "meal plan"
+    },
+    {
+      "role": "assistant",
+      "message": "I created a meal plan from your groceries.",
+      "intent": "generate_meals"
+    },
+    {
+      "role": "user",
+      "content": "Hi"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan that fits your budget.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "Hi"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan that fits your budget.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "Hi"
+    },
+    {
+      "role": "assistant",
+      "message": "Hi — I’m NutriCart AI. I can help with groceries, meals, food logging, and nutrition questions.",
+      "intent": "greeting"
+    },
+    {
+      "role": "user",
+      "content": "Hi"
+    },
+    {
+      "role": "assistant",
+      "message": "Hi — I’m NutriCart AI. I can help with groceries, meals, food logging, and nutrition questions.",
+      "intent": "greeting"
+    },
+    {
+      "role": "user",
+      "content": "Hi"
+    },
+    {
+      "role": "assistant",
+      "message": "Hi — I’m NutriCart AI. I can help with groceries, meals, food logging, and nutrition questions.",
+      "intent": "greeting"
+    },
+    {
+      "role": "user",
+      "content": "Hellp"
+    },
+    {
+      "role": "assistant",
+      "message": "I can build grocery plans, suggest meals from your cart, log what you ate, and explain nutrition tradeoffs.",
+      "intent": "general_help"
+    },
+    {
+      "role": "user",
+      "content": "How are you?"
+    },
+    {
+      "role": "assistant",
+      "message": "I can build grocery plans, suggest meals from your cart, log what you ate, and explain nutrition tradeoffs.",
+      "intent": "general_help"
+    },
+    {
+      "role": "user",
+      "content": "I need grocery list under 50 dollars for this week"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan that fits your budget.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "hi"
+    },
+    {
+      "role": "assistant",
+      "message": "Hi — I’m NutriCart AI. I can help with groceries, meals, food logging, and nutrition questions.",
+      "intent": "greeting"
+    },
+    {
+      "role": "user",
+      "content": "Hello"
+    },
+    {
+      "role": "assistant",
+      "message": "Hi — I’m NutriCart AI. I can help with groceries, meals, food logging, and nutrition questions.",
+      "intent": "greeting"
+    },
+    {
+      "role": "user",
+      "content": "How are you"
+    },
+    {
+      "role": "assistant",
+      "message": "I can build grocery plans, suggest meals from your cart, log what you ate, and explain nutrition tradeoffs.",
+      "intent": "general_help"
+    },
+    {
+      "role": "user",
+      "content": "I need grocery list under 50 dollars"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan that fits your budget.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "meal plan"
+    },
+    {
+      "role": "assistant",
+      "message": "I created a meal plan from your groceries.",
+      "intent": "generate_meals"
+    },
+    {
+      "role": "user",
+      "content": "log oat meal for breakfast"
+    },
+    {
+      "role": "assistant",
+      "message": "Breakfast logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "log Bbq chicken and rice for lunch"
+    },
+    {
+      "role": "assistant",
+      "message": "Lunch logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "log pasta for dinner"
+    },
+    {
+      "role": "assistant",
+      "message": "Dinner logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "Hi"
+    },
+    {
+      "role": "assistant",
+      "message": "Hi — I’m NutriCart AI. I can help with groceries, meals, food logging, and nutrition questions.",
+      "intent": "greeting"
+    },
+    {
+      "role": "user",
+      "content": "hi"
+    },
+    {
+      "role": "assistant",
+      "message": "Hi — I’m NutriCart AI. I can help with groceries, meals, food logging, and nutrition questions.",
+      "intent": "greeting"
+    },
+    {
+      "role": "user",
+      "content": "How are you"
+    },
+    {
+      "role": "assistant",
+      "message": "I can build grocery plans, suggest meals from your cart, log what you ate, and explain nutrition tradeoffs.",
+      "intent": "general_help"
+    },
+    {
+      "role": "user",
+      "content": "I need grocery list under 50 dollars"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan for the next 5 days within about $50.\nI pulled nearby stores from live map data for your ZIP, then built a budget-friendly cart using our product comparison layer—representative items and price points, not live aisle inventory.\nBest match: Capitol Supermarket, with 6 core items in your basket.\nThis basket keeps cost sensible while covering the week.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "I need grocery list under 50 dollars"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan for the next 5 days within about $50.\nI pulled nearby stores from live map data for your ZIP, then built a budget-friendly cart using our product comparison layer—representative items and price points, not live aisle inventory.\nBest match: 7-Eleven, with 6 core items in your basket.\nThis basket keeps cost sensible while covering the week.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "I need a meal plan based on this grocery list"
+    },
+    {
+      "role": "assistant",
+      "message": "I created a meal plan from your groceries.",
+      "intent": "generate_meals"
+    },
+    {
+      "role": "user",
+      "content": "I ate dosa for breakfast"
+    },
+    {
+      "role": "assistant",
+      "message": "Breakfast logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "I ate biriyani for lunch"
+    },
+    {
+      "role": "assistant",
+      "message": "Lunch logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "I ate Pasta for dinner"
+    },
+    {
+      "role": "assistant",
+      "message": "Dinner logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "Hi"
+    },
+    {
+      "role": "assistant",
+      "message": "Hi — I’m NutriCart AI. I can help with groceries, meals, food logging, and nutrition questions.",
+      "intent": "greeting"
+    },
+    {
+      "role": "user",
+      "content": "Hi"
+    },
+    {
+      "role": "assistant",
+      "message": "Hi — I’m NutriCart AI. I can help with groceries, meals, food logging, and nutrition questions.",
+      "intent": "greeting"
+    },
+    {
+      "role": "user",
+      "content": "i need grocery list under 50 dollars"
+    },
+    {
+      "role": "assistant",
+      "message": "I found a grocery plan for the next 5 days within about $50.\nI pulled nearby stores from live map data for your ZIP, then built a budget-friendly cart using our product comparison layer—representative items and price points, not live aisle inventory.\nBest match: 7-Eleven, with 6 core items in your basket.\nThis basket keeps cost sensible while covering the week.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "hi"
+    },
+    {
+      "role": "assistant",
+      "message": "Hi — I’m NutriCart AI. I can help with groceries, meals, food logging, and nutrition questions.",
+      "intent": "greeting"
+    },
+    {
+      "role": "user",
+      "content": "I need grocery list under 50 dollars"
+    },
+    {
+      "role": "assistant",
+      "message": "I found 4 nearby options and built this 5-day basket for one store: Whole Foods Market. You do not need to shop multiple places for this list.\nI pulled nearby stores from live map data for your ZIP, then built a budget-friendly cart using our product comparison layer—representative items and price points, not live aisle inventory.\nWhole Foods Market is the best nearby anchor on hours and distance; widen filters if the list feels thin.\nThis basket keeps cost sensible while covering the week.",
+      "intent": "plan_groceries"
+    },
+    {
+      "role": "user",
+      "content": "i need meal plan"
+    },
+    {
+      "role": "assistant",
+      "message": "I created a meal plan from your groceries.",
+      "intent": "generate_meals"
+    },
+    {
+      "role": "user",
+      "content": "I ate oat meal for breakfast"
+    },
+    {
+      "role": "assistant",
+      "message": "Breakfast logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "I ate biriyani for the lunch"
+    },
+    {
+      "role": "assistant",
+      "message": "Lunch logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "I ate maggie for dinner"
+    },
+    {
+      "role": "assistant",
+      "message": "Dinner logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "I ate Millets for breakfast"
+    },
+    {
+      "role": "assistant",
+      "message": "Breakfast logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "I ate Biriyani for lunch"
+    },
+    {
+      "role": "assistant",
+      "message": "Lunch logged.",
+      "intent": "log_food"
+    },
+    {
+      "role": "user",
+      "content": "I ate chapati for dinner"
+    },
+    {
+      "role": "assistant",
+      "message": "Dinner logged.",
+      "intent": "log_food"
     }
   ],
   "stores": [
     {
-      "id": "store_target_mission",
-      "name": "Target — Mission Street",
-      "distance_miles": 0.7,
-      "is_open": true,
+      "id": "osm_node_735126449",
+      "name": "Whole Foods Market",
+      "distance_miles": 0.18,
+      "is_open": false,
+      "address": "1440 P Street Northwest, Washington, DC, 20005",
       "opens_at": null,
-      "zip_code": "94103",
-      "last_updated": "2026-04-18T07:45:00Z"
+      "zip_code": "20052",
+      "last_updated": null,
+      "source": "live"
+    },
+    {
+      "id": "osm_node_745905579",
+      "name": "Capitol Supermarket",
+      "distance_miles": 0.26,
+      "is_open": false,
+      "address": "1231 11th Street Northwest, 20001",
+      "opens_at": null,
+      "zip_code": "20052",
+      "last_updated": null,
+      "source": "live"
+    },
+    {
+      "id": "osm_node_10673916984",
+      "name": "Streets Market",
+      "distance_miles": 0.3,
+      "is_open": false,
+      "address": "",
+      "opens_at": null,
+      "zip_code": "20052",
+      "last_updated": null,
+      "source": "live"
+    },
+    {
+      "id": "osm_node_2792739632",
+      "name": "Wawa",
+      "distance_miles": 0.31,
+      "is_open": false,
+      "address": "1 Thomas Circle Northwest, Washington, DC, 20005",
+      "opens_at": null,
+      "zip_code": "20052",
+      "last_updated": null,
+      "source": "live"
     }
   ],
-  "products": [
-    {
-      "id": "prod_safeway_salmon_fillet",
-      "name": "Safeway Atlantic salmon fillet",
-      "store_id": "store_safeway_noriega",
-      "price_usd": 12.99,
-      "in_stock": true,
-      "category": "Seafood",
-      "diet_type": "nonveg",
-      "risky_tags": [
-        "fish"
-      ],
-      "nutrition_tags": [
-        "high_protein",
-        "omega3"
-      ],
-      "calories": 206,
-      "protein_g": 22.0,
-      "fiber_g": 0.0,
-      "carbs_g": 0.0
-    },
-    {
-      "id": "prod_air_chilled_chicken_thighs",
-      "name": "Mary's air-chilled chicken thighs",
-      "store_id": "store_target_mission",
-      "price_usd": 8.99,
-      "in_stock": true,
-      "category": "Meat / Poultry",
-      "diet_type": "nonveg",
-      "risky_tags": [],
-      "nutrition_tags": [
-        "high_protein",
-        "dinner"
-      ],
-      "calories": 200,
-      "protein_g": 26.0,
-      "fiber_g": 0.0,
-      "carbs_g": 0.0
-    },
-    {
-      "id": "prod_tjs_riced_cauliflower",
-      "name": "Trader Joe's organic riced cauliflower",
-      "store_id": "store_trader_joes_castro",
-      "price_usd": 2.99,
-      "in_stock": true,
-      "category": "Frozen / Vegetables",
-      "diet_type": "veg",
-      "risky_tags": [],
-      "nutrition_tags": [
-        "low_carb",
-        "vegetarian"
-      ],
-      "calories": 25,
-      "protein_g": 2.0,
-      "fiber_g": 2.0,
-      "carbs_g": 4.0
-    },
-    {
-      "id": "prod_prego_mushroom",
-      "name": "Prego mushroom pasta sauce",
-      "store_id": "store_walmart_ocean",
-      "price_usd": 2.48,
-      "in_stock": true,
-      "category": "Pantry / Sauce",
-      "diet_type": "veg",
-      "risky_tags": [],
-      "nutrition_tags": [
-        "budget"
-      ],
-      "calories": 70,
-      "protein_g": 2.0,
-      "fiber_g": 2.0,
-      "carbs_g": 11.0
-    },
-    {
-      "id": "prod_barilla_whole_grain_spaghetti",
-      "name": "Barilla whole grain spaghetti",
-      "store_id": "store_target_mission",
-      "price_usd": 2.19,
-      "in_stock": true,
-      "category": "Pantry / Pasta",
-      "diet_type": "veg",
-      "risky_tags": [
-        "gluten",
-        "wheat"
-      ],
-      "nutrition_tags": [
-        "whole_grain",
-        "budget"
-      ],
-      "calories": 200,
-      "protein_g": 8.0,
-      "fiber_g": 6.0,
-      "carbs_g": 41.0
-    },
-    {
-      "id": "prod_gv_long_grain_rice",
-      "name": "Great Value long grain white rice (2 lb)",
-      "store_id": "store_walmart_ocean",
-      "price_usd": 1.84,
-      "in_stock": true,
-      "category": "Pantry / Rice",
-      "diet_type": "veg",
-      "risky_tags": [],
-      "nutrition_tags": [
-        "budget",
-        "staple"
-      ],
-      "calories": 160,
-      "protein_g": 3.0,
-      "fiber_g": 0.0,
-      "carbs_g": 36.0
-    },
-    {
-      "id": "prod_great_value_penne",
-      "name": "Great Value penne rigate",
-      "store_id": "store_walmart_ocean",
-      "price_usd": 1.12,
-      "in_stock": true,
-      "category": "Pantry / Pasta",
-      "diet_type": "veg",
-      "risky_tags": [
-        "gluten",
-        "wheat"
-      ],
-      "nutrition_tags": [
-        "budget",
-        "staple"
-      ],
-      "calories": 200,
-      "protein_g": 7.0,
-      "fiber_g": 2.0,
-      "carbs_g": 42.0
-    }
-  ],
+  "products": [],
   "basket": {
     "items": [
       {
@@ -315,114 +585,132 @@
         "line_total_usd": 8.99
       },
       {
-        "product_id": "prod_tjs_riced_cauliflower",
-        "name": "Trader Joe's organic riced cauliflower",
+        "product_id": "prod_raos_marinara",
+        "name": "Rao's Homemade marinara sauce",
         "quantity": 1,
-        "line_total_usd": 2.99
+        "line_total_usd": 6.99
       },
       {
-        "product_id": "prod_prego_mushroom",
-        "name": "Prego mushroom pasta sauce",
+        "product_id": "prod_beyond_meat_crumbles",
+        "name": "Beyond Meat plant-based beefy crumbles",
         "quantity": 1,
-        "line_total_usd": 2.48
+        "line_total_usd": 5.99
       },
       {
-        "product_id": "prod_barilla_whole_grain_spaghetti",
-        "name": "Barilla whole grain spaghetti",
+        "product_id": "prod_chobani_plain_greek",
+        "name": "Chobani plain nonfat Greek yogurt",
         "quantity": 1,
-        "line_total_usd": 2.19
+        "line_total_usd": 5.49
       },
       {
-        "product_id": "prod_gv_long_grain_rice",
-        "name": "Great Value long grain white rice (2 lb)",
+        "product_id": "prod_pb_natural",
+        "name": "Crazy Richard's natural peanut butter",
         "quantity": 1,
-        "line_total_usd": 1.84
-      },
-      {
-        "product_id": "prod_great_value_penne",
-        "name": "Great Value penne rigate",
-        "quantity": 1,
-        "line_total_usd": 1.12
+        "line_total_usd": 5.49
       }
     ],
-    "subtotal_usd": 32.6
+    "subtotal_usd": 45.94
   },
   "mealPlan": [
-    {
-      "id": "meal_high_protein_breakfast",
-      "title": "High-protein breakfast bowl",
-      "meals": [
-        "Layer yogurt, fruit, and granola; add oats cooked in almond milk for volume.",
-        "Uses your picks: Safeway Atlantic salmon fillet, Mary's air-chilled chicken thighs, Trader Joe's organic riced cauliflower, Prego mushroom pasta sauce, Barilla whole grain spaghetti.",
-        "Pantry anchors: Greek yogurt or cottage cheese, oats (warm or overnight), blueberries, banana, granola sprinkle."
-      ],
-      "notes": "Inspired by american flavors."
-    },
-    {
-      "id": "meal_veg_power_lunch",
-      "title": "Vegetarian power lunch box",
-      "meals": [
-        "Portable macros: prep eggs ahead, keep avocado sealed until eating.",
-        "Uses your picks: Safeway Atlantic salmon fillet, Mary's air-chilled chicken thighs, Trader Joe's organic riced cauliflower, Prego mushroom pasta sauce, Barilla whole grain spaghetti.",
-        "Pantry anchors: baby spinach, avocado, hummus, hard boiled eggs (optional swap tofu), whole grain crackers or naan."
-      ],
-      "notes": "Inspired by american flavors."
-    },
     {
       "id": "meal_chicken_rice_meal_prep",
       "title": "Chicken thigh rice meal-prep",
       "meals": [
         "Brown thighs, bake with sauce, steam rice in parallel — 4 lunch portions.",
-        "Uses your picks: Safeway Atlantic salmon fillet, Mary's air-chilled chicken thighs, Trader Joe's organic riced cauliflower, Prego mushroom pasta sauce, Barilla whole grain spaghetti.",
-        "Pantry anchors: chicken thighs, long grain rice, frozen vegetables, marinara or simmer sauce."
+        "Anchored to groceries you bought at Whole Foods Market: Safeway Atlantic salmon fillet, Mary's air-chilled chicken thighs, Rao's Homemade marinara sauce, Beyond Meat plant-based beefy crumbles.",
+        "Built mainly from your selected grocery basket, with basic pantry staples like rice, oil, salt, and spices assumed where helpful."
       ],
-      "notes": "Inspired by american flavors."
+      "notes": "Meal ideas cover the next 5 days."
+    },
+    {
+      "id": "meal_tikka_cauliflower_bowl",
+      "title": "Cauliflower tikka-style bowl",
+      "meals": [
+        "High-volume, lower-carb bowl; crisp tofu in a hot skillet first.",
+        "Anchored to groceries you bought at Whole Foods Market: Safeway Atlantic salmon fillet, Mary's air-chilled chicken thighs, Rao's Homemade marinara sauce, Beyond Meat plant-based beefy crumbles.",
+        "Built mainly from your selected grocery basket, with basic pantry staples like rice, oil, salt, and spices assumed where helpful."
+      ],
+      "notes": "Meal ideas cover the next 5 days."
+    },
+    {
+      "id": "meal_vegan_tofu_stirfry",
+      "title": "Tofu stir-fry with pantry sauce",
+      "meals": [
+        "Press tofu 15 min, cornstarch dust, pan-fry crisp, toss with quick soy-garlic glaze.",
+        "Anchored to groceries you bought at Whole Foods Market: Safeway Atlantic salmon fillet, Mary's air-chilled chicken thighs, Rao's Homemade marinara sauce, Beyond Meat plant-based beefy crumbles.",
+        "Built mainly from your selected grocery basket, with basic pantry staples like rice, oil, salt, and spices assumed where helpful."
+      ],
+      "notes": "Meal ideas cover the next 5 days."
     }
   ],
   "nutritionSummary": {
-    "score": 87,
-    "calories_today": 212,
-    "protein_g": 14.0,
-    "carbs_g": 26.8,
-    "fat_g": 4.9,
-    "fiber_g": 2.4,
+    "score": 89,
+    "calories_today": 1297,
+    "protein_g": 69.6,
+    "carbs_g": 162.8,
+    "fat_g": 36.0,
+    "fiber_g": 14.2,
     "highlights": [
-      "Fibre is on the light side—add beans, oats, or greens when you shop.",
-      "7 items in your basket leave room to swap without blowing the budget."
-    ]
+      "Added to what you already logged today. About 1297 kilocalories so far.",
+      "This entry added about 120 kilocalories."
+    ],
+    "micronutrient_totals": {
+      "iron_mg": 2.0,
+      "potassium_mg": 480.0,
+      "vitamin_b6_mg": 0.4
+    }
   },
-  "dailyInsight": "Fibre is the softer signal here. Add spinach, beans, or oats on your next shop.",
-  "explanation": "These picks balance cost, protein, and fibre.",
-  "intent": "plan_groceries",
-  "assistantSummary": "I found a grocery plan that fits your budget.",
-  "foodLogUpdates": [],
+  "dailyInsight": "Fibre still has room. Beans, oats, or fruit later will round things out.",
+  "explanation": "This improves fibre and carb progress for today.",
+  "intent": "log_food",
+  "assistantSummary": "Dinner logged.",
+  "foodLogUpdates": [
+    {
+      "item": "Chapati (estimated)",
+      "action": "logged"
+    }
+  ],
   "myDay": {
     "breakfast": {
-      "title": "Biriyani For The Breakfast",
+      "title": "Millets",
       "calories": 120,
       "macrosSummary": "6g protein · 18g carbs · 2g fibre",
       "logged": true
     },
     "lunch": {
-      "title": "pasta",
-      "calories": 200,
-      "macrosSummary": "8g protein · 42g carbs · 3g fibre",
+      "title": "biryani",
+      "calories": 520,
+      "macrosSummary": "22g protein · 68g carbs · 3g fibre",
       "logged": true
     },
     "dinner": {
-      "title": "pasta",
-      "calories": 200,
-      "macrosSummary": "8g protein · 42g carbs · 3g fibre",
+      "title": "Chapati",
+      "calories": 120,
+      "macrosSummary": "6g protein · 18g carbs · 2g fibre",
       "logged": true
     }
   },
   "settings": {
     "profile": {
-      "fullName": "Alex",
+      "fullName": "Nikhil Rama Krishna",
       "username": "Nikhilrk",
       "age": 26,
       "location": "San Francisco, CA",
       "email": "nik@example.com"
+    },
+    "dietary": {
+      "dietType": "omnivore",
+      "mealStyle": "three_meals",
+      "cuisinePreference": "Indian"
+    },
+    "zip": {
+      "zipCode": "22202",
+      "city": "Arlington",
+      "shoppingRadius": 10
+    },
+    "budget": {
+      "weeklyBudget": 50,
+      "budgetPriority": "savings_first"
     }
   }
 }

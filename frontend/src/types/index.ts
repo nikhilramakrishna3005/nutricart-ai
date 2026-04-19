@@ -17,6 +17,11 @@ export interface Store {
   distance_miles: number;
   is_open: boolean;
   opens_at?: string | null;
+  address?: string;
+  zip_code?: string | null;
+  last_updated?: string | null;
+  /** OSM live vs mock fixtures (backend ``Store.source``). */
+  source?: "live" | "mock";
 }
 
 export interface Product {
@@ -26,6 +31,8 @@ export interface Product {
   price_usd: number;
   in_stock: boolean;
   category: string;
+  /** Fixture vs retailer feed (compare_store_products / future live pricing). */
+  source?: "live" | "mock";
 }
 
 export interface BasketItem {
@@ -50,6 +57,10 @@ export interface MealPlan {
 export interface PlanResponse {
   assistant_summary: string;
   stores: Store[];
+  /** Up to four ranked nearby options (mirrors `stores` when backend sends both). */
+  candidate_stores?: Store[];
+  selected_store?: Store | null;
+  store_pick_reason?: string;
   recommended_products: Product[];
   basket: GroceryBasket;
   meal_plans: MealPlan[];
@@ -75,6 +86,8 @@ export interface NutritionSummary {
   fat_g: number;
   fiber_g: number;
   highlights: string[];
+  /** Cumulative micronutrients from food log (mg/mcg keys); optional on older sessions. */
+  micronutrient_totals?: Record<string, number>;
 }
 
 export interface FoodLogResponse {
@@ -103,6 +116,9 @@ export type PersistedSettingsState = Record<string, Record<string, string | numb
 export interface PersistedSessionState {
   chatHistory: Array<Record<string, unknown>>;
   stores: Store[];
+  candidateStores?: Store[];
+  selectedStore?: Store | null;
+  storePickReason?: string;
   products: Product[];
   basket: GroceryBasket;
   mealPlan: MealPlan[];
@@ -126,6 +142,9 @@ export interface ChatResponse {
   intent: string;
   message: string;
   stores: Store[];
+  candidateStores?: Store[];
+  selectedStore?: Store | null;
+  storePickReason?: string;
   products: Product[];
   basket: GroceryBasket;
   mealPlan: MealPlan[];

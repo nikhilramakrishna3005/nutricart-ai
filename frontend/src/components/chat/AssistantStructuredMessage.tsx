@@ -85,7 +85,10 @@ function mealSlotLabel(index: number): string {
 
 function GroceryPlanBody({ res }: { res: ChatResponse }) {
   const title = res.intent === "refine_plan" ? "Plan updated" : "Grocery plan ready";
-  const stores = storeLines(res.stores);
+  const candidates = res.candidateStores ?? res.stores;
+  const stores = storeLines(candidates.slice(0, 4));
+  const selected = res.selectedStore;
+  const selectedShort = selected?.name?.split("—")[0]?.trim() ?? "";
   const groceries = groceryListLines(res);
   const next =
     res.intent === "refine_plan"
@@ -96,9 +99,26 @@ function GroceryPlanBody({ res }: { res: ChatResponse }) {
     <>
       <p className="text-[15px] font-bold tracking-tight text-[#EEF2F7]">{title}</p>
       <p className="mt-1.5 text-[13px] leading-relaxed text-[#A8B8CC]">{res.message}</p>
-      <SectionLabel>Best nearby stores</SectionLabel>
+      <SectionLabel>Nearby options (up to four)</SectionLabel>
       <BulletList items={stores} />
-      <SectionLabel>Suggested grocery list</SectionLabel>
+      {selected ? (
+        <>
+          <SectionLabel>Selected store</SectionLabel>
+          <BulletList
+            items={(() => {
+              const head = `${selected.name}${
+                typeof selected.distance_miles === "number" ? ` · ${selected.distance_miles} mi` : ""
+              } · ${selected.is_open ? "Open now" : selected.opens_at ? `Opens ${selected.opens_at}` : "Closed"}`;
+              const why = (res.storePickReason ?? "").trim();
+              return why ? [head, why] : [head];
+            })()}
+          />
+        </>
+      ) : null}
+      <SectionLabel>{selectedShort ? `Basket for ${selectedShort}` : "Suggested grocery list"}</SectionLabel>
+      <p className="mt-1 text-[12px] leading-snug text-[#5E7590]">
+        One-store basket{selectedShort ? ` — everything below is priced for ${selectedShort}.` : "."}
+      </p>
       <BulletList items={groceries} />
       <SectionLabel>Next step</SectionLabel>
       <p className="mt-1 text-[13px] leading-relaxed text-[#A8B8CC]">{next}</p>

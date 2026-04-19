@@ -18,7 +18,7 @@
 
 ## Demo flow
 
-1. Start API (`uvicorn`) then web (`npm run dev`).  
+1. Start API from `backend/` (`python dev.py` or `uvicorn` with `--reload-dir app --reload-dir data` and `--reload-exclude` for `.venv` / `venv` / caches), then web (`npm run dev`).  
 2. On `/planner`, set filters → **Generate plan** → inspect structured cards.  
 3. Use **Refine plan** or **Log food** in chat; nutrition updates from `/food/log`.
 

@@ -9,7 +9,8 @@ router = APIRouter()
 @router.post("/chat", response_model=ChatResponse, response_model_by_alias=True)
 def chat(body: ChatRequest) -> ChatResponse:
     """
-    Planner dashboard chat: loads `session_state.json`, merges `currentState`, runs the intent
-    handler, persists, and returns `ChatResponse` including a `session` snapshot for hydration.
+    Planner dashboard chat: runs :func:`app.services.chat_pipeline.run_chat_pipeline`
+    (load session → Gemini reasoning when configured → tool/handler execution → persist →
+    ``ChatResponse`` with ``session`` snapshot, including ``myDay``).
     """
     return process_chat(body)

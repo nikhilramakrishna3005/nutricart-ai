@@ -1,19 +1,10 @@
+"use client";
+
 import { Star, StarHalf } from "lucide-react";
 
-import type { Article, ArticleCategoryTone } from "@/data/mockArticles";
-
+import { articleCategoryToneStyles } from "@/components/articles/articleCategoryTone";
+import type { Article } from "@/data/mockArticles";
 import { cn } from "@/lib/utils";
-
-const toneStyles: Record<
-  ArticleCategoryTone,
-  { label: string; pill: string }
-> = {
-  nutrition: { label: "text-[#4ade80]", pill: "bg-[#1a3a1a]" },
-  gut: { label: "text-[#4ade80]", pill: "bg-[#1a3a1a]" },
-  wellness: { label: "text-[#38bdf8]", pill: "bg-[#0d2a3a]" },
-  sleep: { label: "text-[#38bdf8]", pill: "bg-[#0d2a3a]" },
-  recipe: { label: "text-[#fb923c]", pill: "bg-[#2a1a0a]" },
-};
 
 function formatRatingCount(n: number): string {
   if (n >= 1000) {
@@ -66,8 +57,8 @@ function CardRatingBlock({ rating, ratingCount }: { rating: number; ratingCount:
   );
 }
 
-export function ArticleCard({ article }: { article: Article }) {
-  const styles = toneStyles[article.categoryTone];
+export function ArticleCard({ article, onRead }: { article: Article; onRead: () => void }) {
+  const styles = articleCategoryToneStyles[article.categoryTone];
 
   return (
     <article
@@ -95,7 +86,13 @@ export function ArticleCard({ article }: { article: Article }) {
             <span className="min-w-0 truncate font-normal text-[#5E7590]">
               {article.author} · {article.readTimeMinutes} min
             </span>
-            <span className="shrink-0 font-semibold text-[#4ADE80]">Read →</span>
+            <button
+              type="button"
+              onClick={onRead}
+              className="shrink-0 rounded-md px-1 py-0.5 font-semibold text-[#4ADE80] transition-colors hover:bg-[#4ADE80]/10 hover:text-[#6EE7A0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4ADE80]/40"
+            >
+              Read →
+            </button>
           </div>
         </div>
 

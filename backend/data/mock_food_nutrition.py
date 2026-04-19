@@ -184,6 +184,22 @@ MOCK_FOOD_NUTRITION: list[dict[str, Any]] = [
         "micronutrients": {"folate_mcg": 180, "iron_mg": 3.0, "magnesium_mg": 70},
     },
     {
+        "name": "biryani",
+        "calories": 520,
+        "protein": 22.0,
+        "fiber": 3.0,
+        "carbs": 68.0,
+        "micronutrients": {"iron_mg": 2.0, "potassium_mg": 480, "vitamin_b6_mg": 0.4},
+    },
+    {
+        "name": "dosa",
+        "calories": 180,
+        "protein": 5.0,
+        "fiber": 2.5,
+        "carbs": 32.0,
+        "micronutrients": {"iron_mg": 1.2, "folate_mcg": 45, "magnesium_mg": 38},
+    },
+    {
         "name": "naan",
         "calories": 260,
         "protein": 9.0,

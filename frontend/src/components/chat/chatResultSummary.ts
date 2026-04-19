@@ -68,6 +68,19 @@ export function buildChatResultSummary(
   const intent = res.intent;
   const intentLine = INTENT_LABELS[intent] ?? intent.replace(/_/g, " ");
 
+  if (intent === "greeting" || intent === "general_help" || intent === "unsupported") {
+    return {
+      variant: "idle",
+      cardTitle: "Chat",
+      intentLine: intent === "greeting" ? "Hello" : intent === "unsupported" ? "Not supported" : "Help",
+      headline: assistantBubbleText(res.message) || "How can I help?",
+      storeCount: null,
+      productCount: null,
+      mealCount: null,
+      showCounts: false,
+    };
+  }
+
   if (intent === "log_food") {
     const ns = res.nutritionSummary;
     const progressLine = `Updated nutrition · score ${ns.score} · ~${ns.calories_today} kcal today`;
@@ -91,7 +104,7 @@ export function buildChatResultSummary(
     cardTitle: "Latest Plan",
     intentLine,
     headline,
-    storeCount: res.stores?.length ?? 0,
+    storeCount: (res.candidateStores ?? res.stores)?.length ?? 0,
     productCount: res.products?.length ?? 0,
     mealCount: res.mealPlan?.length ?? 0,
     showCounts: true,

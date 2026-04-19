@@ -1,8 +1,10 @@
+"use client";
+
 import Link from "next/link";
-import { User } from "lucide-react";
 
 import { DayNavigator } from "@/components/planner/DayNavigator";
 import { NutrientBadge } from "@/components/planner/NutrientBadge";
+import { useUserProfileOptional } from "@/context/UserProfileContext";
 import { AppTopBar } from "@/components/shared/AppTopBar";
 
 const profileBtnClass =
@@ -12,11 +14,13 @@ const profileBtnClass =
  * Planner top bar: profile, centered day navigator, nutrient badge.
  */
 export function PlannerHeader() {
+  const { initials } = useUserProfileOptional();
+
   return (
     <AppTopBar
       left={
         <Link href="/profile" className={profileBtnClass} aria-label="Open profile">
-          <User className="size-[18px]" strokeWidth={2} />
+          <span className="text-[11px] font-bold tracking-tight text-[#EEF2F7]">{initials}</span>
         </Link>
       }
       center={

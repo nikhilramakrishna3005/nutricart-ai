@@ -8,7 +8,10 @@ from app.services.plan_service import RefinementKind, _detect_refinement
 
 # --- Primary line shown in the assistant summary slot (clean, product-style) ---
 CHAT_MESSAGE: dict[ChatIntent, str] = {
-    "plan_groceries": "I found a grocery plan that fits your budget.",
+    "greeting": "Hi — I’m NutriCart AI. I can help with groceries, meals, food logging, and nutrition questions.",
+    "general_help": "I can build grocery plans, suggest meals from your cart, log what you ate, and explain nutrition tradeoffs.",
+    "unsupported": "I’m focused on groceries and nutrition for this demo — try asking for a shopping plan or meal ideas.",
+    "plan_groceries": "Here is a grocery plan tailored to your filters and ZIP.",
     "refine_plan": "I adjusted your grocery plan based on your request.",
     "generate_meals": "I created a meal plan from your groceries.",
     "log_food": "Your meal has been logged.",
@@ -17,7 +20,11 @@ CHAT_MESSAGE: dict[ChatIntent, str] = {
 
 # --- Supporting line (paired with structured blocks; not debug output) ---
 CHAT_EXPLANATION: dict[ChatIntent, str] = {
-    "plan_groceries": "These picks balance cost, protein, and fibre.",
+    "greeting": "Use the chat box to ask for a plan, refine your cart, or log a meal.",
+    "general_help": "Set filters (budget, diet, zip) in the planner, then ask in natural language.",
+    "unsupported": "Ask for groceries, meal ideas from your basket, food logging, or a nutrition explanation.",
+    "plan_groceries": "Up to four nearby stores are ranked open-first; the basket uses one selected store with representative items for budgeting.",
+    "refine_plan": "Tell me what to change — cheaper, one store, higher protein, and more.",
     "generate_meals": "These meals use the items already in your basket.",
     "log_food": "This improves fibre and carb progress for today.",
     "explain_plan": "It balances affordability, nutrition, and your preferences.",

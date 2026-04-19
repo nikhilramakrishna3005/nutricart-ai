@@ -49,9 +49,17 @@ function historyRowsToMsgs(rows: ReturnType<typeof chatMessagesFromHistory>): Ms
   return rows.map((m) => ({ id: m.id, role: m.role, text: m.text }));
 }
 
+const CONVERSATION_ONLY_INTENTS = new Set(["greeting", "general_help", "unsupported"]);
+
+function responseShowsStructuredPlanCards(res: ChatResponse): boolean {
+  if (CONVERSATION_ONLY_INTENTS.has(res.intent)) return false;
+  return true;
+}
+
 /** Rich assistant bubble for the latest turn when `lastChatResponse.message` matches the saved line. */
 function attachLastAssistantStructured(msgs: Msg[], res: ChatResponse | null): Msg[] {
   if (!res || msgs.length === 0) return msgs;
+  if (!responseShowsStructuredPlanCards(res)) return msgs;
   const last = msgs[msgs.length - 1];
   if (last.role !== "assistant") return msgs;
   const a = last.text.trim();

@@ -1,9 +1,9 @@
 "use client";
 
-import { Plus } from "lucide-react";
-
 import { MealCard, type MealMacros } from "@/components/planner/MealCard";
+import { calculateMacroPercent, type MacroTargets } from "@/lib/nutrition-calculations";
 import { useNutriStore } from "@/lib/store/useNutriStore";
+import { useDashboardMetrics } from "@/lib/useDashboardMetrics";
 import { cn } from "@/lib/utils";
 import type { MyDaySlot } from "@/types";
 
@@ -21,9 +21,6 @@ type DayRow = {
 
 const SHELL = "w-full rounded-[20px] bg-[#131C2A] px-4 py-5 sm:px-6 sm:py-6";
 
-const addBtnClass =
-  "flex size-9 shrink-0 items-center justify-center rounded-full border border-[#2A3A50] bg-[#1A2333] text-[#EEF2F7] transition-colors hover:bg-[#232d42] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2A3A50] focus-visible:ring-offset-2 focus-visible:ring-offset-[#131C2A]";
-
 const SLOT_ORDER: Array<{ key: MealKey; label: string }> = [
   { key: "breakfast", label: "Breakfast" },
   { key: "lunch", label: "Lunch" },
@@ -35,45 +32,42 @@ function isLoggedSlot(slot: MyDaySlot | null | undefined): slot is MyDaySlot {
 }
 
 /**
- * Backend `macrosSummary` is like "20g protein · 30g carbs · 5g fibre".
- * Map to 0–100 bar fills; estimate fat from remaining kcal when not in the string.
+ * Parse `macrosSummary` (e.g. "20g protein · 30g carbs · 5g fibre") and map each macro to % of daily target.
  */
-function macroBarsFromSlot(slot: MyDaySlot): MealMacros {
+function macroBarsFromSlot(slot: MyDaySlot, targets: MacroTargets): MealMacros {
   const s = slot.macrosSummary || "";
   const pM = s.match(/([\d.]+)\s*g\s*protein/i);
   const cM = s.match(/([\d.]+)\s*g\s*carbs/i);
-  const fM = s.match(/([\d.]+)\s*g\s*fat/i);
-  let pG = pM ? Number.parseFloat(pM[1]) : 0;
-  let cG = cM ? Number.parseFloat(cM[1]) : 0;
-  let fG = fM ? Number.parseFloat(fM[1]) : 0;
-  if (!fM && slot.calories > 0 && (pG > 0 || cG > 0)) {
-    const remainder = slot.calories - 4 * pG - 4 * cG;
-    fG = remainder > 0 ? remainder / 9 : 0;
-  }
-  const cap = (g: number, max: number) =>
-    Math.min(100, Math.max(0, Math.round(max > 0 ? (g / max) * 100 : 0)));
+  const fibM = s.match(/([\d.]+)\s*g\s*fib(?:er|re)?/i);
+  const pG = pM ? Number.parseFloat(pM[1]) : 0;
+  const cG = cM ? Number.parseFloat(cM[1]) : 0;
+  const fibG = fibM ? Number.parseFloat(fibM[1]) : 0;
+
   return {
-    p: cap(pG, 40),
-    f: cap(fG, 30),
-    c: cap(cG, 60),
+    protein: calculateMacroPercent(pG, targets.proteinTarget),
+    carbs: calculateMacroPercent(cG, targets.carbsTarget),
+    fibre: calculateMacroPercent(fibG, targets.fibreTarget),
   };
 }
 
-function rowsFromMyDay(myDay: {
-  breakfast: MyDaySlot | null;
-  lunch: MyDaySlot | null;
-  dinner: MyDaySlot | null;
-}): DayRow[] {
+function rowsFromMyDay(
+  myDay: {
+    breakfast: MyDaySlot | null;
+    lunch: MyDaySlot | null;
+    dinner: MyDaySlot | null;
+  },
+  targets: MacroTargets,
+): DayRow[] {
   return SLOT_ORDER.map(({ key, label }) => {
     const slot = myDay[key];
     if (isLoggedSlot(slot)) {
-      const macros = macroBarsFromSlot(slot);
-      const hasMacroSignal = macros.p > 0 || macros.f > 0 || macros.c > 0;
+      const macros = macroBarsFromSlot(slot, targets);
+      const hasMacroSignal = macros.protein > 0 || macros.carbs > 0 || macros.fibre > 0;
       return {
         key: `myday-${key}`,
         title: slot.title?.trim() || label,
         calories: Number.isFinite(slot.calories) ? slot.calories : 0,
-        macros: hasMacroSignal ? macros : { p: 0, f: 0, c: 0 },
+        macros: hasMacroSignal ? macros : { protein: 0, carbs: 0, fibre: 0 },
         logged: true,
         caption: slot.macrosSummary?.trim() || undefined,
       };
@@ -82,7 +76,7 @@ function rowsFromMyDay(myDay: {
       key: `myday-${key}-empty`,
       title: label,
       calories: 0,
-      macros: { p: 0, f: 0, c: 0 },
+      macros: { protein: 0, carbs: 0, fibre: 0 },
       logged: false,
       notLoggedMessage: "Not logged yet",
     };
@@ -95,23 +89,20 @@ interface MyDayCardProps {
 
 /**
  * My Day: breakfast / lunch / dinner from shared `myDay` (chat + GET /session hydrate).
+ * Mini bars use the same daily macro targets as the rest of the planner.
  */
 export function MyDayCard({ className }: MyDayCardProps) {
   const myDay = useNutriStore((s) => s.myDay);
-  const rows = rowsFromMyDay(myDay);
+  const { targets } = useDashboardMetrics();
+  const rows = rowsFromMyDay(myDay, targets);
 
   return (
     <section className={cn(SHELL, className)} aria-labelledby="my-day-heading">
-      <div className="flex items-center justify-between gap-3">
-        <h2 id="my-day-heading" className="text-base font-bold tracking-tight-head text-[#EEF2F7]">
-          My Day
-        </h2>
-        <button type="button" className={addBtnClass} aria-label="Add meal">
-          <Plus className="size-5" strokeWidth={2} />
-        </button>
-      </div>
+      <h2 id="my-day-heading" className="text-base font-bold tracking-tight-head text-[#EEF2F7]">
+        My Day
+      </h2>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-5 space-y-3.5 sm:space-y-4">
         {rows.map((row) => (
           <MealCard
             key={row.key}

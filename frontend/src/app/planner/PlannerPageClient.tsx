@@ -56,12 +56,12 @@ function PlannerDashboard() {
 
           <DailyInsightCard />
 
-          <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch lg:gap-6 xl:gap-8">
-            <div className="flex flex-col gap-6">
-              <MacroRingsCard className="lg:h-full" />
-              <TrendGraphCard />
+          <div className="grid w-full grid-cols-1 gap-5 lg:grid-cols-2 lg:items-stretch lg:gap-6 xl:gap-8">
+            <div className="flex h-full min-h-0 w-full flex-col gap-5">
+              <MacroRingsCard className="shrink-0" />
+              <TrendGraphCard className="min-h-0 flex-1" />
             </div>
-            <DailyTargetsCard className="lg:h-full" />
+            <DailyTargetsCard className="lg:min-h-0" />
           </div>
 
           <MicronutrientHealthCard />

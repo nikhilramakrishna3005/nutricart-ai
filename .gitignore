@@ -6,6 +6,11 @@ dist/
 build/
 frontend/node_modules/
 frontend/.next/
+
+# Python environments and bytecode
+.venv/
+venv/
+backend/.venv/
 backend/venv/
 __pycache__/
 *.pyc

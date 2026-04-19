@@ -2,21 +2,28 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any, NamedTuple
 
 from data.mock_food_nutrition import MOCK_FOOD_NUTRITION
 
+logger = logging.getLogger(__name__)
+
 from app.models.schemas import FoodLogRequest, FoodLogResponse, NutritionSummary
 
 # Short spoken fragments → canonical table keys (deterministic).
 _FRAGMENT_ALIASES: dict[str, str] = {
+    "biriyani": "biryani",
+    "biriani": "biryani",
     "yogurt": "greek yogurt",
     "greek yogurt": "greek yogurt",
     "chicken": "chicken breast",
     "oats": "oatmeal",
     "oat": "oatmeal",
     "oatmeal": "oatmeal",
+    "dosas": "dosa",
+    "dosa": "dosa",
     "rice": "white rice",
     "bananas": "banana",
     "berries": "blueberries",
@@ -30,11 +37,11 @@ MEAL_SLOTS = ("breakfast", "lunch", "dinner")
 def infer_explicit_meal_slot(message: str) -> str | None:
     """Detect breakfast / lunch / dinner from the raw user message (word boundaries)."""
     m = message.lower()
-    if re.search(r"\bbreakfast\b", m):
+    if re.search(r"\bbreakfast\b", m) or re.search(r"\bthis morning\b", m):
         return "breakfast"
     if re.search(r"\blunch\b", m):
         return "lunch"
-    if re.search(r"\bdinner\b", m):
+    if re.search(r"\bdinner\b", m) or re.search(r"\btonight\b", m):
         return "dinner"
     return None
 
@@ -57,6 +64,54 @@ def pick_default_meal_slot(my_day: dict[str, Any]) -> str:
         if _meal_slot_value_empty(my_day.get(key)):
             return key
     return "breakfast"
+
+
+def _normalize_structured_meal_slot(slot: str | None) -> str | None:
+    if not slot or not isinstance(slot, str):
+        return None
+    s = slot.strip().lower()
+    if s in MEAL_SLOTS:
+        return s
+    if s in ("brunch", "morning"):
+        return "breakfast"
+    if s in ("supper", "evening"):
+        return "dinner"
+    return None
+
+
+def _compose_log_text(message: str, structured_foods: list[str] | None) -> str:
+    """Merge Gemini/tool ``foods`` hints into free text for fragment parsing (no duplicate tokens)."""
+    base = (message or "").strip()
+    if not structured_foods:
+        return base
+    base_l = base.lower()
+    extras: list[str] = []
+    for f in structured_foods:
+        fs = str(f).strip()
+        if not fs or fs.lower() in base_l:
+            continue
+        extras.append(fs)
+    if not extras:
+        return base
+    extra = ", ".join(extras)[:400]
+    if not base:
+        return f"I had {extra}"
+    return f"{base} {extra}".strip()
+
+
+def _resolve_meal_slot(
+    text_for_inference: str,
+    my_day: dict[str, Any],
+    structured_meal_slot: str | None,
+) -> str:
+    """Prefer validated Gemini slot, else explicit words in text, else first empty My Day slot."""
+    gem = _normalize_structured_meal_slot(structured_meal_slot)
+    if gem:
+        return gem
+    explicit = infer_explicit_meal_slot(text_for_inference)
+    if explicit:
+        return explicit
+    return pick_default_meal_slot(my_day or {})
 
 
 class FoodLogChatBundle(NamedTuple):
@@ -83,9 +138,21 @@ def _parse_food_items(message: str) -> list[str]:
     """
     raw = message.strip().lower()
     raw = re.sub(r"^\s*log\s+", "", raw)
+    # "For lunch I had …" — strip leading slot clause before stripping "I had …".
+    raw = re.sub(
+        r"^\s*for (breakfast|lunch|dinner|brunch|a snack|snack)\s+",
+        "",
+        raw,
+    )
+    raw = re.sub(r"^\s*(breakfast|lunch|dinner)\s+was\s+", "", raw)
     raw = re.sub(r"^\s*(i|we)\s+(had|ate|have eaten)\s+", "", raw)
     raw = re.sub(r"^\s*(had|ate)\s+", "", raw)
-    raw = re.sub(r"\s*\bfor (breakfast|lunch|dinner|brunch|a snack|snack)\b.*$", "", raw)
+    # "… pasta for dinner" — strip trailing slot only.
+    raw = re.sub(
+        r"\s+\bfor (breakfast|lunch|dinner|brunch|a snack|snack)\b\s*$",
+        "",
+        raw,
+    )
     raw = re.sub(r"\s*\b(this morning|tonight)\b", "", raw)
     raw = re.sub(r"\b(some|a few|little bit of|bit of|just)\b", " ", raw)
     raw = re.sub(r"\s+", " ", raw).strip()
@@ -146,6 +213,16 @@ def _merge_micronutrients(rows: list[dict[str, Any]]) -> dict[str, float]:
     return merged
 
 
+def _merge_micro_with_prior(prior: dict[str, float] | None, delta: dict[str, float]) -> dict[str, float]:
+    out = dict(prior or {})
+    for k, v in delta.items():
+        try:
+            out[k] = round(float(out.get(k, 0.0)) + float(v), 4)
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
 def _micro_lines(merged: dict[str, float], limit: int = 2) -> list[str]:
     if not merged:
         return []
@@ -166,8 +243,12 @@ def _log_food_compute(
     message: str,
     prior: NutritionSummary | None,
     my_day: dict[str, Any] | None,
+    *,
+    structured_meal_slot: str | None = None,
+    structured_foods: list[str] | None = None,
 ) -> FoodLogChatBundle:
-    frags = _parse_food_items(message)
+    text = _compose_log_text(message, structured_foods)
+    frags = _parse_food_items(text)
     rows: list[dict[str, Any]] = []
     labels: list[str] = []
     for frag in frags:
@@ -240,6 +321,11 @@ def _log_food_compute(
         "Numbers are estimates until you adjust serving sizes."
     )
 
+    micro_totals = _merge_micro_with_prior(
+        prior.micronutrient_totals if prior else None,
+        micro,
+    )
+
     nutrition = NutritionSummary(
         score=score,
         calories_today=tcal,
@@ -248,11 +334,10 @@ def _log_food_compute(
         fat_g=tfat,
         fiber_g=tfib,
         highlights=highlights[:3],
+        micronutrient_totals=micro_totals,
     )
 
-    explicit = infer_explicit_meal_slot(message)
-    default_slot = pick_default_meal_slot(my_day or {})
-    meal_slot = explicit or default_slot
+    meal_slot = _resolve_meal_slot(text, my_day or {}, structured_meal_slot)
 
     clean_labels = [re.sub(r"\s+\(estimated\)\s*$", "", x, flags=re.I) for x in labels]
     entry_title = ", ".join(clean_labels) if clean_labels else "Logged items"
@@ -276,12 +361,84 @@ def log_food_chat(
     message: str,
     prior: NutritionSummary | None,
     my_day: dict[str, Any] | None = None,
+    *,
+    structured_meal_slot: str | None = None,
+    structured_foods: list[str] | None = None,
 ) -> FoodLogChatBundle:
-    """Chat `log_food` path with optional merge onto `nutritionSummary` from `currentState`."""
-    return _log_food_compute(message, prior, my_day)
+    """
+    Chat ``log_food`` path with optional merge onto ``nutritionSummary`` from ``currentState``.
+
+    When Gemini (or tools) supply ``structured_meal_slot`` / ``structured_foods``, the backend
+    uses them for reliable My Day routing and parsing; otherwise slot follows message text then
+    empty-slot order breakfast → lunch → dinner.
+    """
+    logger.info(
+        "log_food_chat: message=%r structured_slot=%r foods=%r prior_cal=%s",
+        (message or "")[:160],
+        structured_meal_slot,
+        structured_foods,
+        getattr(prior, "calories_today", None) if prior else None,
+    )
+    bundle = _log_food_compute(
+        message,
+        prior,
+        my_day,
+        structured_meal_slot=structured_meal_slot,
+        structured_foods=structured_foods,
+    )
+    logger.info(
+        "log_food_chat: slot=%s labels=%s totals_cal=%s protein=%s micro_keys=%s",
+        bundle.meal_slot,
+        bundle.update_labels,
+        bundle.nutrition.calories_today,
+        bundle.nutrition.protein_g,
+        list((bundle.nutrition.micronutrient_totals or {}).keys())[:12],
+    )
+    return bundle
 
 
 def log_food_intake(body: FoodLogRequest) -> FoodLogResponse:
     """HTTP `/food/log` — no prior-day merge (stateless)."""
     bundle = _log_food_compute(body.message, prior=None, my_day=None)
     return FoodLogResponse(parsed_items=bundle.parsed_fragments, nutrition=bundle.nutrition)
+
+
+def log_food_entry(
+    *,
+    message: str,
+    prior: NutritionSummary | None,
+    my_day: dict[str, Any] | None,
+    foods: list[str] | None = None,
+    meal_slot: str | None = None,
+) -> dict[str, Any]:
+    """
+    Tool-router entry: same deterministic pipeline as ``log_food_chat``, with optional
+    ``foods`` and ``meal_slot`` hints (from Gemini tool arguments).
+    """
+    bundle = log_food_chat(
+        (message or "").strip(),
+        prior,
+        my_day or {},
+        structured_meal_slot=meal_slot,
+        structured_foods=foods if foods else None,
+    )
+    return {
+        "tool": "log_food_entry",
+        "meal_slot": bundle.meal_slot,
+        "nutrition": bundle.nutrition.model_dump(mode="json"),
+        "update_labels": bundle.update_labels,
+        "daily_insight": bundle.daily_insight,
+        "explanation": bundle.explanation,
+        "entry_title": bundle.entry_title,
+        "entry_calories": bundle.entry_calories,
+        "entry_macros_summary": bundle.entry_macros_summary,
+        "log_meal_session_patch": {
+            "meal_slot": bundle.meal_slot,
+            "slot": {
+                "title": bundle.entry_title,
+                "calories": bundle.entry_calories,
+                "macrosSummary": bundle.entry_macros_summary,
+                "logged": True,
+            },
+        },
+    }

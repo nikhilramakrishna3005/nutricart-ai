@@ -3,12 +3,13 @@
 import { useMemo } from "react";
 
 import { usePlannerNutriBridge } from "@/lib/store/usePlannerNutriBridge";
+import { useDashboardMetrics } from "@/lib/useDashboardMetrics";
 import { cn } from "@/lib/utils";
 
 const MOCK_SERIES = [45, 60, 55, 70, 65, 80, 75];
 
-const W = 320;
-const H = 132;
+const W = 340;
+const H = 168;
 const PAD = 18;
 
 function toPoints(values: number[]): [number, number][] {
@@ -60,29 +61,32 @@ interface TrendGraphCardProps {
  */
 export function TrendGraphCard({ className }: TrendGraphCardProps) {
   const { nutritionSummary } = usePlannerNutriBridge();
+  const { overallNutritionPercentToday } = useDashboardMetrics();
 
   const series = useMemo(() => {
     const s = [...MOCK_SERIES];
     if (nutritionSummary != null) {
-      const v = Math.min(98, Math.max(44, nutritionSummary.score));
+      const v = Math.min(98, Math.max(44, overallNutritionPercentToday));
       s[6] = v;
       s[5] = Math.round(s[4] * 0.42 + v * 0.58);
     }
     return s;
-  }, [nutritionSummary]);
+  }, [nutritionSummary, overallNutritionPercentToday]);
 
   const points = toPoints(series);
   const strokePath = linePath(points);
   const fillPath = areaPath(points);
+  const viewBox = `0 0 ${W} ${H}`;
+
   return (
     <section
       className={cn(
-        "w-full rounded-[20px] border border-[#2A3A50] bg-[#131C2A] p-4 sm:p-5",
+        "flex min-h-0 w-full flex-1 flex-col rounded-[20px] border border-[#2A3A50] bg-[#131C2A] p-4 sm:p-5",
         className,
       )}
       aria-labelledby="weekly-progress-title"
     >
-      <div className="mb-3">
+      <div className="mb-3 shrink-0 sm:mb-4">
         <h2
           id="weekly-progress-title"
           className="text-base font-bold tracking-tight text-[#EEF2F7] sm:text-[17px]"
@@ -92,10 +96,10 @@ export function TrendGraphCard({ className }: TrendGraphCardProps) {
         <p className="mt-0.5 text-xs font-medium tracking-tight text-[#5E7590] sm:text-sm">Last 7 days</p>
       </div>
 
-      <div className="relative w-full overflow-hidden rounded-xl">
+      <div className="relative flex min-h-0 flex-1 w-full items-stretch overflow-hidden rounded-xl">
         <svg
-          viewBox={`0 0 ${W} ${H}`}
-          className="h-[132px] w-full max-w-full"
+          viewBox={viewBox}
+          className="h-full min-h-[9.75rem] w-full max-w-full flex-1 sm:min-h-[10.5rem] lg:max-h-[15rem]"
           preserveAspectRatio="xMidYMid meet"
           role="img"
           aria-label="Nutrition trend over the last seven days, increasing overall"

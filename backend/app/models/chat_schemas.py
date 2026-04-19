@@ -1,12 +1,15 @@
 """Chat API request/response models for the planner dashboard (mock / rule-based MVP)."""
 
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
 
 from app.models.schemas import GroceryBasket, MealPlan, NutritionSummary, Product, Store
 
 ChatIntent = Literal[
+    "greeting",
+    "general_help",
+    "unsupported",
     "plan_groceries",
     "refine_plan",
     "generate_meals",
@@ -67,6 +70,12 @@ class ChatResponse(BaseModel):
     intent: str
     message: str
     stores: list[Store]
+    candidate_stores: list[Store] = Field(
+        default_factory=list,
+        serialization_alias="candidateStores",
+    )
+    selected_store: Store | None = Field(default=None, serialization_alias="selectedStore")
+    store_pick_reason: str = Field(default="", serialization_alias="storePickReason")
     products: list[Product]
     basket: GroceryBasket
     meal_plan: list[MealPlan] = Field(serialization_alias="mealPlan")
@@ -77,7 +86,15 @@ class ChatResponse(BaseModel):
     session: dict[str, Any] = Field(
         default_factory=dict,
         serialization_alias="session",
-        description="Full persisted session after this turn (client hydration).",
+        description="Full persisted session after this turn (client hydration: stores, products, basket, mealPlan, nutritionSummary, myDay, chatHistory, …).",
     )
     #: Internal only — My Day slot payload for `log_food` (omitted from JSON).
     log_meal_session_patch: dict[str, Any] | None = Field(default=None, exclude=True)
+
+    @model_validator(mode="after")
+    def _backfill_candidate_stores(self) -> Self:
+        if self.candidate_stores:
+            return self
+        if self.stores:
+            return self.model_copy(update={"candidate_stores": list(self.stores)})
+        return self

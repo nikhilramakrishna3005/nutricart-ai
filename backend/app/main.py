@@ -5,12 +5,41 @@ Routers stay thin; business logic lives in `services/`, shapes in `models/`,
 and static fixtures in `data/`.
 """
 
+from __future__ import annotations
+
+import logging
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Load backend/.env before any application code reads os.environ.
+_BACKEND_ROOT = Path(__file__).resolve().parents[1]
+_ENV_FILE = _BACKEND_ROOT / ".env"
+_dotenv_applied = load_dotenv(_ENV_FILE)
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routes import chat, food, health, plan, session, settings_routes, stores
+from app.services.gemini_service import validate_gemini_startup
 
-app = FastAPI(title="NutriCart AI API", version="0.1.0")
+_logger = logging.getLogger(__name__)
+_logger.info(
+    "Environment: .env path=%s file_exists=%s dotenv_applied=%s",
+    _ENV_FILE,
+    _ENV_FILE.exists(),
+    _dotenv_applied,
+)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    validate_gemini_startup()
+    yield
+
+
+app = FastAPI(title="NutriCart AI API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

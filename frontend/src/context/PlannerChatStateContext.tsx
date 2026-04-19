@@ -12,6 +12,8 @@ import {
 } from "react";
 
 import { sendChat } from "@/lib/api";
+import { normalizeNutritionSummaryApi } from "@/lib/normalizeNutritionSummary";
+import { useNutriStore } from "@/lib/store/useNutriStore";
 import type {
   ChatResponse,
   FoodLogUpdate,
@@ -51,6 +53,9 @@ function buildCurrentState(
     ...out,
     assistant_summary: plan.assistant_summary,
     stores: plan.stores,
+    candidate_stores: plan.candidate_stores ?? plan.stores,
+    selected_store: plan.selected_store ?? null,
+    store_pick_reason: plan.store_pick_reason ?? "",
     recommended_products: plan.recommended_products,
     products: plan.recommended_products,
     basket: plan.basket,
@@ -60,14 +65,20 @@ function buildCurrentState(
 }
 
 function chatResponseToPlan(res: ChatResponse): PlanResponse {
+  const candidates = res.candidateStores ?? res.stores;
   return {
     assistant_summary: res.message,
     stores: res.stores,
+    candidate_stores: candidates,
+    selected_store: res.selectedStore ?? null,
+    store_pick_reason: res.storePickReason ?? "",
     recommended_products: res.products,
     basket: res.basket,
     meal_plans: res.mealPlan,
   };
 }
+
+const CONVERSATION_ONLY_INTENTS = new Set(["greeting", "general_help", "unsupported"]);
 
 export type PlannerChatContextValue = {
   filters: PlannerFilters;
@@ -101,16 +112,34 @@ export function PlannerChatStateProvider({ children }: { children: ReactNode }) 
       setChatSending(true);
       setChatError(null);
       try {
+        const nutri = useNutriStore.getState();
+        const effectiveNutrition =
+          nutritionSummary ??
+          normalizeNutritionSummaryApi(nutri.nutritionSummary) ??
+          nutri.nutritionSummary;
         const res = await sendChat({
           message: text,
           preferences: filtersToPreferences(filters),
-          currentState: buildCurrentState(plan, nutritionSummary),
+          currentState: {
+            ...buildCurrentState(plan, effectiveNutrition),
+            myDay: nutri.myDay,
+          },
         });
-        setPlan(chatResponseToPlan(res));
-        setNutritionSummary(res.nutritionSummary);
-        setDailyInsight(res.dailyInsight ?? "");
-        setExplanation(res.explanation ?? "");
-        setFoodLogUpdates(res.foodLogUpdates ?? []);
+        useNutriStore.getState().applyChatResponse(res);
+        if (!CONVERSATION_ONLY_INTENTS.has(res.intent)) {
+          setPlan(chatResponseToPlan(res));
+          // Keep in sync with the store merge (normalized top-level + session nutrition, myDay).
+          setNutritionSummary(useNutriStore.getState().nutritionSummary ?? null);
+          setDailyInsight(res.dailyInsight ?? "");
+          setExplanation(res.explanation ?? "");
+          setFoodLogUpdates(res.foodLogUpdates ?? []);
+        }
+        if (process.env.NODE_ENV === "development" && res.intent === "log_food") {
+          console.info("[nutricart:log_food] plannerChat pipeline", {
+            storeCalories: useNutriStore.getState().nutritionSummary?.calories_today,
+            myDay: useNutriStore.getState().myDay,
+          });
+        }
         const assistantText = res.message?.trim() || `Updated (${res.intent}).`;
         return { assistantText };
       } catch (e) {

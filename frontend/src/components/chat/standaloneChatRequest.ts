@@ -1,6 +1,7 @@
 import type { ChatPreferencesPayload, ChatRequestPayload, ChatResponse } from "@/types";
 
-import { useNutriStore } from "@/lib/store/useNutriStore";
+import { normalizeNutritionSummaryApi } from "@/lib/normalizeNutritionSummary";
+import { mergeMyDayFromSession, useNutriStore } from "@/lib/store/useNutriStore";
 import type { PlannerFilters } from "@/types";
 
 export function plannerFiltersToChatPreferences(f: PlannerFilters): ChatPreferencesPayload {
@@ -14,16 +15,30 @@ export function plannerFiltersToChatPreferences(f: PlannerFilters): ChatPreferen
   };
 }
 
+const CONVERSATION_ONLY_INTENTS = new Set(["greeting", "general_help", "unsupported"]);
+
 /** Shape `currentState` for the next turn from the last structured response. */
 export function currentStateFromChatResponse(res: ChatResponse | null): Record<string, unknown> {
   if (!res) return {};
+  // Let the backend merge re-use the persisted planner snapshot (sending empty keys would wipe it).
+  if (CONVERSATION_ONLY_INTENTS.has(res.intent)) return {};
+  const nz = useNutriStore.getState();
+  const nut =
+    normalizeNutritionSummaryApi(res.nutritionSummary) ??
+    normalizeNutritionSummaryApi(res.session?.nutritionSummary) ??
+    nz.nutritionSummary;
+  const myDay = mergeMyDayFromSession(nz.myDay, res.session?.myDay);
   return {
     intent: res.intent,
     stores: res.stores,
+    candidateStores: res.candidateStores ?? res.stores,
+    selectedStore: res.selectedStore,
+    storePickReason: res.storePickReason,
     products: res.products,
     basket: res.basket,
     mealPlan: res.mealPlan,
-    nutritionSummary: res.nutritionSummary,
+    nutritionSummary: nut,
+    myDay,
     foodLogUpdates: res.foodLogUpdates,
     dailyInsight: res.dailyInsight,
     explanation: res.explanation,

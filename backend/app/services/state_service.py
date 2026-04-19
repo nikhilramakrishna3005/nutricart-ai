@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
 from app.models.chat_schemas import ChatRequest, ChatResponse
+
+logger = logging.getLogger(__name__)
 
 # backend/data/session_state.json (this file lives in backend/app/services/)
 SESSION_PATH = Path(__file__).resolve().parents[2] / "data" / "session_state.json"
@@ -111,6 +114,9 @@ def _persisted_to_current_state(persisted: dict[str, Any]) -> dict[str, Any]:
     return {
         "intent": persisted.get("intent") or "",
         "stores": persisted.get("stores") or [],
+        "candidateStores": persisted.get("candidateStores") or persisted.get("candidate_stores") or [],
+        "selectedStore": persisted.get("selectedStore") or persisted.get("selected_store"),
+        "storePickReason": persisted.get("storePickReason") or persisted.get("store_pick_reason") or "",
         "products": persisted.get("products") or [],
         "basket": persisted.get("basket") or {"items": [], "subtotal_usd": 0},
         "mealPlan": persisted.get("mealPlan") or [],
@@ -148,6 +154,7 @@ def persist_after_chat(
 ) -> dict[str, Any]:
     """Append chat turns and snapshot planner fields; save to disk. Returns the merged saved state."""
     cur = dict(base) if base is not None else load_state()
+    prev_ns = cur.get("nutritionSummary")
     hist = list(cur.get("chatHistory") or [])
     hist.append({"role": "user", "content": user_message})
     hist.append(
@@ -176,20 +183,42 @@ def persist_after_chat(
         ):
             my_day[slot] = slot_data
 
-    return update_state(
-        {
-            "chatHistory": hist,
-            "stores": dumped["stores"],
-            "products": dumped["products"],
-            "basket": dumped["basket"],
-            "mealPlan": dumped["mealPlan"],
-            "nutritionSummary": dumped["nutritionSummary"],
-            "dailyInsight": dumped["dailyInsight"],
-            "explanation": dumped["explanation"],
-            "intent": dumped["intent"],
-            "assistantSummary": response.message,
-            "foodLogUpdates": dumped["foodLogUpdates"],
-            "myDay": my_day,
-        },
-        base=cur,
-    )
+    # Conversation-only turns must not wipe the saved planner snapshot.
+    skip_planner_snapshot = response.intent in ("greeting", "general_help", "unsupported")
+    base_updates: dict[str, Any] = {
+        "chatHistory": hist,
+        "intent": dumped["intent"],
+        "assistantSummary": response.message,
+        "explanation": dumped["explanation"],
+        "myDay": my_day,
+    }
+    if not skip_planner_snapshot:
+        base_updates.update(
+            {
+                "stores": dumped["stores"],
+                "products": dumped["products"],
+                "basket": dumped["basket"],
+                "mealPlan": dumped["mealPlan"],
+                "nutritionSummary": dumped["nutritionSummary"],
+                "dailyInsight": dumped["dailyInsight"],
+                "foodLogUpdates": dumped["foodLogUpdates"],
+            }
+        )
+
+    if response.intent == "log_food":
+        next_ns = base_updates.get("nutritionSummary")
+        slot_dbg = None
+        if response.log_meal_session_patch and isinstance(response.log_meal_session_patch, dict):
+            slot_dbg = response.log_meal_session_patch.get("meal_slot")
+        logger.info(
+            "persist_after_chat log_food: slot=%s prev_cal=%s next_cal=%s my_day_keys=%s",
+            slot_dbg,
+            (prev_ns or {}).get("calories_today") if isinstance(prev_ns, dict) else prev_ns,
+            (next_ns or {}).get("calories_today") if isinstance(next_ns, dict) else next_ns,
+            list((base_updates.get("myDay") or {}).keys()) if isinstance(base_updates.get("myDay"), dict) else None,
+        )
+
+    out = update_state(base_updates, base=cur)
+    if response.intent == "log_food":
+        logger.info("persist_after_chat log_food: session saved (nutritionSummary present=%s)", "nutritionSummary" in out)
+    return out

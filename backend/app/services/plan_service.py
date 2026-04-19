@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import Literal, NamedTuple
+from typing import Any, Literal, NamedTuple
 
 from data.mock_meals import MOCK_MEALS
 from data.mock_products import MOCK_PRODUCTS
@@ -21,6 +21,8 @@ from app.models.schemas import (
 )
 from app.services.store_service import get_store_by_id, list_stores_near_zip
 
+MAX_NEARBY_STORE_OPTIONS = 4
+
 
 def _product_from_row(row: dict) -> Product:
     return Product(
@@ -30,6 +32,7 @@ def _product_from_row(row: dict) -> Product:
         price_usd=float(row["price"]),
         in_stock=bool(row["available"]),
         category=row["category"],
+        source="mock",
         diet_type=row.get("dietType"),
         risky_tags=list(row.get("riskyTags") or []),
         nutrition_tags=list(row.get("nutritionTags") or []),
@@ -88,8 +91,141 @@ def _filter_products(
     return products
 
 
+def _store_base_key(name: str) -> str:
+    raw = (name or "").split("—")[0].split(",")[0].strip().lower()
+    raw = re.sub(r"\s+", " ", raw)
+    return raw[:56] or "unknown"
+
+
+def _dedupe_stores_nearby(stores: list[Store]) -> list[Store]:
+    """Drop near-duplicate banners; prefer open, then closer distance."""
+    by_key: dict[str, Store] = {}
+    for s in sorted(stores, key=lambda x: (x.distance_miles, not x.is_open)):
+        k = _store_base_key(s.name)
+        prev = by_key.get(k)
+        if prev is None:
+            by_key[k] = s
+            continue
+        if (not prev.is_open and s.is_open) or (
+            prev.is_open == s.is_open and s.distance_miles + 1e-6 < prev.distance_miles
+        ):
+            by_key[k] = s
+    return list(by_key.values())
+
+
+def _grocery_suitability_score(name: str) -> int:
+    """Higher = better full grocery trip vs convenience-only."""
+    n = (name or "").lower()
+    strong = (
+        "walmart",
+        "target",
+        "safeway",
+        "trader",
+        "whole foods",
+        "costco",
+        "kroger",
+        "albertsons",
+        "market",
+        "grocery",
+        "supercenter",
+        "aldi",
+        "food lion",
+        "publix",
+        "heb",
+        "h-e-b",
+    )
+    weak = ("7-eleven", "711", "cvs", "walgreens", "pharmacy", "liquor", "convenience", "gas")
+    score = 40
+    for w in strong:
+        if w in n:
+            score += 22
+    for w in weak:
+        if w in n:
+            score -= 40
+    return max(0, min(120, score))
+
+
+def _rank_store_candidates(stores: list[Store]) -> list[Store]:
+    """Open first, then distance, then grocery suitability (desc), stable by name."""
+    deduped = _dedupe_stores_nearby(stores)
+    return sorted(
+        deduped,
+        key=lambda s: (
+            not s.is_open,
+            s.distance_miles,
+            -_grocery_suitability_score(s.name),
+            s.name.lower(),
+        ),
+    )
+
+
 def _rank_stores_open_first(stores: list[Store]) -> list[Store]:
-    return sorted(stores, key=lambda s: (not s.is_open, s.distance_miles))
+    return _rank_store_candidates(stores)
+
+
+def _product_count_for_store(pool: list[Product], store_id: str) -> int:
+    return sum(1 for p in pool if p.store_id == store_id)
+
+
+def _pick_best_store_for_plan(
+    candidates: list[Store],
+    pool_all: list[Product],
+    budget_usd: float,
+) -> tuple[Store | None, str]:
+    """Pick one anchor retailer; prefer open + catalog depth + value vs budget."""
+    if not candidates:
+        return None, ""
+    if not any(_product_count_for_store(pool_all, s.id) > 0 for s in candidates):
+        best = min(candidates, key=lambda s: (not s.is_open, s.distance_miles, s.name.lower()))
+        short = best.name.split("—")[0].strip()
+        return (
+            best,
+            f"{short} is the best nearby anchor on hours and distance; widen filters if the list feels thin.",
+        )
+    scored: list[tuple[tuple, Store]] = []
+    for s in candidates:
+        ps = [p for p in pool_all if p.store_id == s.id]
+        n_lines = len(ps)
+        n_budget_ok = sum(1 for p in ps if p.price_usd <= max(6.0, budget_usd * 0.4))
+        avg_price = (sum(p.price_usd for p in ps) / n_lines) if ps else 999.0
+        open_penalty = 0 if s.is_open else 1
+        key = (open_penalty, -n_lines, -n_budget_ok, s.distance_miles, avg_price)
+        scored.append((key, s))
+    best = min(scored, key=lambda t: t[0])[1]
+    short = best.name.split("—")[0].strip()
+    n_match = _product_count_for_store(pool_all, best.id)
+    if best.is_open:
+        why = "it is open now"
+    elif all(not x.is_open for x in candidates):
+        why = "it is the strongest nearby match while everything else is closed for now"
+    else:
+        why = "it still has the best assortment match in our catalog for your filters"
+    reason = (
+        f"{short} — {why}, about {best.distance_miles:.1f} mi away, with {n_match} matching SKUs "
+        f"under your diet and budget."
+    )
+    return best, reason
+
+
+def _ensure_selected_in_candidates(candidates: list[Store], selected: Store) -> list[Store]:
+    if not candidates:
+        return [selected]
+    if any(s.id == selected.id for s in candidates):
+        return candidates[:MAX_NEARBY_STORE_OPTIONS]
+    merged = [selected] + [s for s in candidates if s.id != selected.id]
+    return merged[:MAX_NEARBY_STORE_OPTIONS]
+
+
+def _dominant_store_id_from_basket(basket: GroceryBasket) -> str | None:
+    by_id = {p.id: p for p in _catalog()}
+    ctr: dict[str, int] = {}
+    for bi in basket.items:
+        p = by_id.get(bi.product_id)
+        if p:
+            ctr[p.store_id] = ctr.get(p.store_id, 0) + 1
+    if not ctr:
+        return None
+    return sorted(ctr.keys(), key=lambda k: (-ctr[k], k))[0]
 
 
 def _grocery_message_hints(message: str) -> tuple[list[str], frozenset[str]]:
@@ -213,8 +349,14 @@ def _meal_plans_from_basket(
     *,
     max_plans: int = 3,
     min_plans: int = 2,
+    store_label: str | None = None,
 ) -> list[MealPlan]:
     names = ", ".join(i.name for i in basket.items[:5]) or "your staples"
+    staple_line = (
+        "Built mainly from your selected grocery basket, with basic pantry staples like rice, oil, salt, "
+        "and spices assumed where helpful."
+    )
+    where = f" from {store_label}" if store_label else ""
     matched = [m for m in MOCK_MEALS if _meal_matches_cuisine(m, cuisine) and _meal_ok_for_diet(m, diet)]
     if not matched:
         matched = [m for m in MOCK_MEALS if _meal_ok_for_diet(m, diet)]
@@ -223,15 +365,18 @@ def _meal_plans_from_basket(
 
     def _one(m: dict) -> MealPlan:
         ing = ", ".join(m.get("ingredients", [])[:6])
-        cuisine = str(m.get("cuisinePreference", "") or "").strip()
-        notes = f"Inspired by {cuisine} flavors." if cuisine else "Balanced for your current basket."
+        c_pref = str(m.get("cuisinePreference", "") or "").strip()
+        notes = f"Inspired by {c_pref} flavors." if c_pref else "Balanced for your current basket."
+        if store_label:
+            notes = f"{notes} (Groceries{where}.)"
         return MealPlan(
             id=str(m["id"]),
             title=str(m["title"]),
             meals=[
                 str(m.get("summary", "")),
-                f"Uses your picks: {names}.",
-                f"Pantry anchors: {ing}.",
+                f"Uses your basket picks: {names}.",
+                staple_line,
+                f"Pantry anchors for texture and flavor: {ing}.",
             ],
             notes=notes,
         )
@@ -276,6 +421,7 @@ def _nutrition_from_basket(
                 "Nothing in stock matched those filters.",
                 "Try a slightly higher budget or fewer exclusions, then ask again.",
             ],
+            micronutrient_totals={},
         )
 
     d = max(1, days)
@@ -317,6 +463,7 @@ def _nutrition_from_basket(
         fat_g=daily_fat,
         fiber_g=daily_fib,
         highlights=hl[:2],
+        micronutrient_totals={},
     )
 
 
@@ -326,19 +473,45 @@ def nutrition_summary_for_plan(plan: PlanResponse, grocery_days: int) -> Nutriti
     return _nutrition_from_basket(plan.basket, by_id, max(1, grocery_days))
 
 
+def _stores_use_live_map_data(stores: list[Store]) -> bool:
+    """True when at least one store row came back from live OSM lookup (``Store.source == \"live\"``)."""
+    return any(getattr(s, "source", None) == "live" for s in stores)
+
+
+def _grocery_provenance_line(stores: list[Store]) -> str:
+    """One honest sentence for the assistant headline (no \"mock\" wording)."""
+    if _stores_use_live_map_data(stores):
+        return (
+            "I pulled nearby stores from live map data for your ZIP, then built a budget-friendly cart "
+            "using our product comparison layer—representative items and price points, not live aisle inventory."
+        )
+    return (
+        "Nearby store names here are illustrative listings for your ZIP; the cart uses our "
+        "product comparison layer—representative items and price points, not live aisle inventory."
+    )
+
+
+def _comparison_dataset_footer() -> str:
+    return (
+        "Product examples and prices come from our internal comparison dataset for budgeting—they are not "
+        "real-time shelf scans."
+    )
+
+
 def _plan_groceries_headline(
     req: PlanRequest,
     basket: GroceryBasket,
     _flags: frozenset[str],
     _hint_keywords: list[str],
-    stores: list[Store],
+    candidates: list[Store],
+    selected: Store | None,
+    pick_reason: str,
 ) -> str:
     days = req.grocery_days
     cap = req.budget_usd
     n = len(basket.items)
     sub = basket.subtotal_usd
-    first = stores[0] if stores else None
-    top = first.name.split("—")[0].strip() if first else "A nearby store"
+    top = selected.name.split("—")[0].strip() if selected else "your store"
 
     if n == 0:
         return (
@@ -346,21 +519,41 @@ def _plan_groceries_headline(
             "Try raising the budget slightly, relaxing diet, or choosing another store."
         )
 
-    line1 = f"I found a grocery plan for the next {days} days within about ${cap:.0f}."
-    line2 = f"Best match: {top}, with {n} core items in your basket."
+    line1 = (
+        f"I found {len(candidates)} nearby options and built this {days}-day basket for one store: {top}. "
+        "You do not need to shop multiple places for this list."
+    )
+    provenance = _grocery_provenance_line(candidates)
+    line2 = (pick_reason or f"{top} balanced hours, distance, and what is in stock for your filters.").strip()
     if sub < cap * 0.82:
         line3 = "Spend stays conservative, with room for produce or snacks."
     elif sub > cap * 0.92:
         line3 = "Spend sits near your cap; small swaps help if you add more."
     else:
         line3 = "This basket keeps cost sensible while covering the week."
-    return f"{line1}\n{line2}\n{line3}"
+    return f"{line1}\n{provenance}\n{line2}\n{line3}"
 
 
-def _plan_groceries_explanation() -> str:
+def _plan_groceries_explanation(candidates: list[Store], pick_reason: str) -> str:
+    if _stores_use_live_map_data(candidates):
+        store_clause = (
+            "Up to four nearby stores are ranked open-first, then distance, then grocery fit; "
+            "live listings come from open map data for your ZIP."
+        )
+    else:
+        store_clause = (
+            "Up to four nearby stores are ranked open-first, then distance, then grocery fit; "
+            "listings anchor the trip with sample retailers for your ZIP."
+        )
+    basket_clause = (
+        "This basket is built for one retailer so you do not need to split the trip. "
+        "Meals reuse these groceries with basics like rice, oil, salt, and spices assumed when helpful."
+    )
+    tail = pick_reason.strip()
+    glue = f" {tail}" if tail else ""
     return (
-        "Stores are ordered with open locations first, then distance. "
-        "Items respect your diet and exclusions; your message steers what we emphasize."
+        f"{store_clause} {basket_clause}{glue} "
+        f"{_comparison_dataset_footer()}"
     )
 
 
@@ -393,10 +586,23 @@ def execute_plan_groceries(req: PlanRequest, message: str) -> PlanGroceriesResul
     hint_keywords, flags = _grocery_message_hints(message)
     merged_keywords = hint_keywords
 
-    stores = _rank_stores_open_first(list_stores_near_zip(req.zip_code))
-    pool = _filter_products(req, extra_keywords=merged_keywords or None, only_in_stock=True)
-    if not pool:
-        pool = _filter_products(req, extra_keywords=None, only_in_stock=True)
+    ranked_stores = _rank_store_candidates(list_stores_near_zip(req.zip_code))
+    candidates = ranked_stores[:MAX_NEARBY_STORE_OPTIONS]
+
+    pool_all = _filter_products(req, extra_keywords=merged_keywords or None, only_in_stock=True)
+    if not pool_all:
+        pool_all = _filter_products(req, extra_keywords=None, only_in_stock=True)
+
+    best, pick_reason = _pick_best_store_for_plan(candidates, pool_all, req.budget_usd)
+    if best is None and candidates:
+        best = candidates[0]
+        pick_reason = f"Using {best.name.split('—')[0].strip()} as the trip anchor for this plan."
+
+    pool: list[Product] = (
+        [p for p in pool_all if p.store_id == best.id] if best else list(pool_all)
+    )
+    if best and not pool:
+        pool = list(pool_all)
 
     ranked = _sort_products_for_basket(pool, hint_keywords, flags)
     basket = _pick_basket(ranked, req.budget_usd)
@@ -404,23 +610,39 @@ def execute_plan_groceries(req: PlanRequest, message: str) -> PlanGroceriesResul
     in_basket_ids = {i.product_id for i in basket.items}
     recommended: list[Product] = []
     for p in ranked:
+        if best and p.store_id != best.id:
+            continue
         if p.id in in_basket_ids:
             recommended.append(p)
     for p in ranked:
+        if best and p.store_id != best.id:
+            continue
         if p.id not in in_basket_ids and len(recommended) < 12:
             recommended.append(p)
 
-    meal_plans = _meal_plans_from_basket(req.cuisine, basket, req.diet, max_plans=3, min_plans=2)
+    candidates_out = _ensure_selected_in_candidates(candidates, best) if best else candidates
+    store_short = best.name.split("—")[0].strip() if best else None
+    meal_plans = _meal_plans_from_basket(
+        req.cuisine,
+        basket,
+        req.diet,
+        max_plans=3,
+        min_plans=2,
+        store_label=store_short,
+    )
 
     by_id = {p.id: p for p in _catalog()}
     nutrition = _nutrition_from_basket(basket, by_id, req.grocery_days)
-    headline = _plan_groceries_headline(req, basket, flags, hint_keywords, stores)
+    headline = _plan_groceries_headline(req, basket, flags, hint_keywords, candidates_out, best, pick_reason)
     daily_insight = _daily_insight_from_plan(nutrition, basket, req)
-    explanation = _plan_groceries_explanation()
+    explanation = _plan_groceries_explanation(candidates_out, pick_reason)
 
     plan = PlanResponse(
         assistant_summary=headline,
-        stores=stores,
+        stores=list(candidates_out),
+        candidate_stores=list(candidates_out),
+        selected_store=best,
+        store_pick_reason=pick_reason,
         recommended_products=recommended,
         basket=basket,
         meal_plans=meal_plans,
@@ -439,7 +661,7 @@ def _meal_plans(
     basket: GroceryBasket,
     diet: Literal["vegetarian", "non_veg", "either"],
 ) -> list[MealPlan]:
-    return _meal_plans_from_basket(cuisine, basket, diet, max_plans=3, min_plans=2)
+    return _meal_plans_from_basket(cuisine, basket, diet, max_plans=3, min_plans=2, store_label=None)
 
 
 RefinementKind = Literal[
@@ -462,6 +684,12 @@ def normalize_plan_state(raw: dict) -> dict:
         d["meal_plans"] = d.get("mealPlan") or []
     if "recommended_products" not in d and "products" in d:
         d["recommended_products"] = d.get("products") or []
+    if "candidate_stores" not in d and "candidateStores" in d:
+        d["candidate_stores"] = d.get("candidateStores") or []
+    if "selected_store" not in d and "selectedStore" in d:
+        d["selected_store"] = d.get("selectedStore")
+    if "store_pick_reason" not in d and "storePickReason" in d:
+        d["store_pick_reason"] = d.get("storePickReason") or ""
     return d
 
 
@@ -736,12 +964,28 @@ def execute_refine_plan_chat(pre: PlanResponse, req: PlanRequest, message: str) 
         refined = _clip_to_budget_products(refined, req.budget_usd)
 
     basket = _basket_from_product_list(refined)
-    stores_out = _stores_after_refinement(kind, refined, req)
+    ranked_all = _rank_store_candidates(list_stores_near_zip(req.zip_code))
+    candidates = ranked_all[:MAX_NEARBY_STORE_OPTIONS]
+    dom_sid = _dominant_store_id_from_basket(basket)
+    selected = get_store_by_id(dom_sid) if dom_sid else None
+    if selected is None:
+        fallback = _stores_after_refinement(kind, refined, req)
+        selected = fallback[0] if fallback else None
+    if selected:
+        candidates = _ensure_selected_in_candidates(candidates, selected)
+    stores_out = list(candidates)
+    store_pick = _refinement_explanation(kind)
+    if selected:
+        short = selected.name.split("—")[0].strip()
+        store_pick = f"{store_pick} Basket centers on {short} so you keep a single-store trip."
 
     diet_for_meals: Literal["vegetarian", "non_veg", "either"] = (
         "vegetarian" if kind == "veg_alternatives" else req.diet
     )
-    meal_plans = _meal_plans_from_basket(req.cuisine, basket, diet_for_meals, max_plans=3, min_plans=2)
+    meal_label = selected.name.split("—")[0].strip() if selected else None
+    meal_plans = _meal_plans_from_basket(
+        req.cuisine, basket, diet_for_meals, max_plans=3, min_plans=2, store_label=meal_label
+    )
 
     by_id = {p.id: p for p in _catalog()}
     nutrition = _nutrition_from_basket(basket, by_id, req.grocery_days)
@@ -755,6 +999,8 @@ def execute_refine_plan_chat(pre: PlanResponse, req: PlanRequest, message: str) 
     for p in pool:
         if len(recommended) >= 12:
             break
+        if selected and p.store_id != selected.id:
+            continue
         if p.id not in seen:
             recommended.append(p)
             seen.add(p.id)
@@ -771,11 +1017,14 @@ def execute_refine_plan_chat(pre: PlanResponse, req: PlanRequest, message: str) 
     headline = refine_headlines.get(kind, refine_headlines["none"])
     headline = f"{headline}\nAbout ${basket.subtotal_usd:.0f} total across {len(basket.items)} items."
     daily = _daily_insight_from_plan(nutrition, basket, req)
-    expl = _refinement_explanation(kind)
+    expl = f"{_refinement_explanation(kind)}\n{_comparison_dataset_footer()}"
 
     plan = PlanResponse(
         assistant_summary=headline,
         stores=stores_out,
+        candidate_stores=list(stores_out),
+        selected_store=selected,
+        store_pick_reason=store_pick,
         recommended_products=recommended,
         basket=basket,
         meal_plans=meal_plans,
@@ -931,17 +1180,22 @@ def execute_generate_meals(pre: PlanResponse, req: PlanRequest, message: str) ->
 
     templates = _pick_meal_templates_for_generation(message, req, blob)
     meal_plans: list[MealPlan] = []
+    store_bits = pre.selected_store.name.split("—")[0].strip() if pre.selected_store else ""
+    staple = (
+        "Built mainly from your selected grocery basket, with basic pantry staples like rice, oil, salt, "
+        "and spices assumed where helpful."
+    )
     for m in templates:
         summary = str(m.get("summary", "")) or ""
         sum_short = summary[:100] + ("…" if len(summary) > 100 else "")
+        anchor = (
+            f"Anchored to groceries you bought{f' at {store_bits}' if store_bits else ''}: {names_short}."
+        )
         meal_plans.append(
             MealPlan(
                 id=str(m["id"]),
                 title=str(m["title"]),
-                meals=[
-                    sum_short,
-                    f"Anchored to what you already bought: {names_short}.",
-                ],
+                meals=[sum_short, anchor, staple],
                 notes=f"Meal ideas cover the next {days} days.",
             )
         )
@@ -968,11 +1222,20 @@ def execute_generate_meals(pre: PlanResponse, req: PlanRequest, message: str) ->
     else:
         daily = "Solid base. Repeat one protein prep mid-week to save time."
 
-    expl = "Each idea leans on ingredients already in your basket. Adjust portions to taste."
+    expl = (
+        "Each idea leans on ingredients already in your basket, with basics like rice, oil, salt, "
+        "and spices assumed when helpful. Adjust portions to taste."
+    )
+
+    cand = list(pre.candidate_stores or pre.stores)[:MAX_NEARBY_STORE_OPTIONS]
+    stores_trim = list(pre.stores)[:MAX_NEARBY_STORE_OPTIONS]
 
     plan = PlanResponse(
         assistant_summary=headline,
-        stores=pre.stores,
+        stores=stores_trim or cand,
+        candidate_stores=cand or stores_trim,
+        selected_store=pre.selected_store,
+        store_pick_reason=pre.store_pick_reason or "",
         recommended_products=pre.recommended_products,
         basket=pre.basket,
         meal_plans=meal_plans,
@@ -987,16 +1250,30 @@ def execute_generate_meals(pre: PlanResponse, req: PlanRequest, message: str) ->
 
 
 def build_plan(req: PlanRequest) -> PlanResponse:
-    stores = _rank_stores_open_first(list_stores_near_zip(req.zip_code))
-    picks = _filter_products(req, only_in_stock=True)[:8]
+    ranked_stores = _rank_store_candidates(list_stores_near_zip(req.zip_code))
+    candidates = ranked_stores[:MAX_NEARBY_STORE_OPTIONS]
+    pool_all = _filter_products(req, only_in_stock=True)
+    best, pick_reason = _pick_best_store_for_plan(candidates, pool_all, req.budget_usd)
+    if best is None and candidates:
+        best = candidates[0]
+        pick_reason = f"Using {best.name.split('—')[0].strip()} as the starter anchor."
+    pool = [p for p in pool_all if p.store_id == best.id] if best else list(pool_all)
+    if best and not pool:
+        pool = list(pool_all)
+    picks = sorted(pool, key=lambda p: p.price_usd)[:8]
     basket = _pick_basket(picks, req.budget_usd)
+    candidates_out = _ensure_selected_in_candidates(candidates, best) if best else candidates
     summary = (
         f"I sketched a {req.grocery_days}-day starter plan near you "
-        f"with your {req.diet} settings and about ${req.budget_usd:.0f} to spend."
+        f"with your {req.diet} settings and about ${req.budget_usd:.0f} to spend.\n"
+        f"{_grocery_provenance_line(candidates_out)}"
     )
     return PlanResponse(
         assistant_summary=summary,
-        stores=stores,
+        stores=list(candidates_out),
+        candidate_stores=list(candidates_out),
+        selected_store=best,
+        store_pick_reason=pick_reason,
         recommended_products=picks,
         basket=basket,
         meal_plans=_meal_plans(req.cuisine, basket, req.diet),
@@ -1007,3 +1284,50 @@ def refine_plan(body: PlanRefineRequest) -> PlanResponse:
     """HTTP `/plan/refine` — same deterministic refinements as chat."""
     base = body.previous or build_plan(body.filters)
     return execute_refine_plan_chat(base, body.filters, body.message).plan
+
+
+# --- Tool-router entry points (mock catalog; swap bodies for live providers later) ---
+
+
+def tool_build_grocery_plan(filters: PlanRequest, message: str) -> dict[str, Any]:
+    """Structured payload for ``build_grocery_plan`` tool execution."""
+    r = execute_plan_groceries(filters, message)
+    return {
+        "tool": "build_grocery_plan",
+        "plan": r.plan.model_dump(mode="json"),
+        "nutrition_summary": r.nutrition_summary.model_dump(mode="json"),
+        "daily_insight": r.daily_insight,
+        "explanation": r.explanation,
+        "headline": r.headline,
+    }
+
+
+def tool_generate_meal_plan(pre: PlanResponse, filters: PlanRequest, message: str) -> dict[str, Any]:
+    """Structured payload for ``generate_meal_plan`` tool execution."""
+    r = execute_generate_meals(pre, filters, message)
+    return {
+        "tool": "generate_meal_plan",
+        "plan": r.plan.model_dump(mode="json"),
+        "nutrition_summary": r.nutrition_summary.model_dump(mode="json"),
+        "daily_insight": r.daily_insight,
+        "explanation": r.explanation,
+        "headline": r.headline,
+    }
+
+
+def tool_explain_nutrition_gap(
+    message: str,
+    plan: PlanResponse,
+    filters: PlanRequest,
+    nutrition: NutritionSummary,
+) -> dict[str, Any]:
+    """Structured payload for ``explain_nutrition_gap`` tool execution."""
+    from app.services.explain_plan_service import build_explain_plan_bundle
+
+    b = build_explain_plan_bundle(message, plan, filters, nutrition)
+    return {
+        "tool": "explain_nutrition_gap",
+        "message": b.message,
+        "explanation": b.explanation,
+        "daily_insight": b.daily_insight,
+    }

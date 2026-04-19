@@ -8,12 +8,15 @@ const EMPTY_NUTRITION: ChatResponse["nutritionSummary"] = {
   fat_g: 0,
   fiber_g: 0,
   highlights: [],
+  micronutrient_totals: {},
 };
 
 export function sessionHasPersistedPlannerData(session: PersistedSessionState): boolean {
   const md = session.myDay;
   const anyMyDayLogged =
     Boolean(md?.breakfast?.logged) || Boolean(md?.lunch?.logged) || Boolean(md?.dinner?.logged);
+  const hasInsight =
+    Boolean((session.dailyInsight ?? "").trim()) || Boolean((session.explanation ?? "").trim());
   return (
     (session.stores?.length ?? 0) > 0 ||
     (session.products?.length ?? 0) > 0 ||
@@ -22,22 +25,45 @@ export function sessionHasPersistedPlannerData(session: PersistedSessionState): 
     session.nutritionSummary != null ||
     (session.foodLogUpdates?.length ?? 0) > 0 ||
     anyMyDayLogged ||
+    hasInsight ||
     (session.chatHistory?.length ?? 0) > 0
   );
 }
 
+function conversationOnlyIntent(intent: string | undefined): boolean {
+  return intent === "greeting" || intent === "general_help" || intent === "unsupported";
+}
+
+function inferPersistedChatIntent(session: PersistedSessionState): string {
+  const raw = (session.intent ?? "").trim();
+  if (raw) return raw;
+  const hasPlanner =
+    (session.stores?.length ?? 0) > 0 ||
+    (session.products?.length ?? 0) > 0 ||
+    (session.basket?.items?.length ?? 0) > 0 ||
+    (session.mealPlan?.length ?? 0) > 0;
+  return hasPlanner ? "plan_groceries" : "general_help";
+}
+
 /** Rebuild a `ChatResponse` shape from GET /session for `lastChatResponse` / payloads. */
 export function chatResponseFromPersistedSession(session: PersistedSessionState): ChatResponse {
+  const intent = inferPersistedChatIntent(session);
+  const convOnly = conversationOnlyIntent(intent);
+  const stores = convOnly ? [] : (session.stores ?? []);
+  const candidates = convOnly ? [] : (session.candidateStores ?? session.stores ?? []);
   return {
-    intent: session.intent || "plan_groceries",
+    intent,
     message: session.assistantSummary || "",
-    stores: session.stores ?? [],
-    products: session.products ?? [],
-    basket: session.basket ?? { items: [], subtotal_usd: 0 },
-    mealPlan: session.mealPlan ?? [],
-    nutritionSummary: session.nutritionSummary ?? EMPTY_NUTRITION,
-    foodLogUpdates: session.foodLogUpdates ?? [],
-    dailyInsight: session.dailyInsight ?? "",
+    stores,
+    candidateStores: candidates,
+    selectedStore: convOnly ? undefined : (session.selectedStore ?? undefined),
+    storePickReason: convOnly ? undefined : (session.storePickReason ?? undefined),
+    products: convOnly ? [] : (session.products ?? []),
+    basket: convOnly ? { items: [], subtotal_usd: 0 } : (session.basket ?? { items: [], subtotal_usd: 0 }),
+    mealPlan: convOnly ? [] : (session.mealPlan ?? []),
+    nutritionSummary: convOnly ? EMPTY_NUTRITION : (session.nutritionSummary ?? EMPTY_NUTRITION),
+    foodLogUpdates: convOnly ? [] : (session.foodLogUpdates ?? []),
+    dailyInsight: convOnly ? "" : (session.dailyInsight ?? ""),
     explanation: session.explanation ?? "",
     session,
   };
